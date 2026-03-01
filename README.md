@@ -1,292 +1,112 @@
-# Niche Books Exchange Platform
+# Book Sharing and Discussion Platform
 
-## Project Overview
-
-This project is a web platform where users can lend, borrow, sell, and bid on niche or rare books that are usually not available in libraries. Along with this, the platform provides a discussion space similar to Reddit where users can create communities around authors, books, and genres and have conversations.
-
-The main idea is that **books are the central object** in the system. Everything else such as listings, borrowing, bidding, and discussions is built around books.
-
-This project demonstrates strong backend design, relational database modeling, REST API design, and full-stack integration using Django, React, and PostgreSQL.
+Welcome to the **Book Sharing and Discussion Platform**, a full-stack web application designed for bibliophiles. This platform allows users to lend, borrow, sell, and bid on niche or rare books while participating in Reddit-style community discussions.
 
 ---
 
-## Tech Stack
+## 🚀 What's Built (Backend)
 
-### Backend
-- Django
-- Django REST Framework
+The backend is fully implemented using **Django** and **Django REST Framework (DRF)**. It features a robust relational database schema managed via **PostgreSQL**.
 
-### Frontend
-- React
+### Core Apps:
+- **Users**: Custom user model with JWT-based authentication (Login, Register).
+- **Books**: Management of a central book registry and user-specific book listings.
+- **Boards**: Discussion communities (Boards), Posts, and Comments with nested relationships.
 
-### Database
-- PostgreSQL
-
-### Authentication
-- Django authentication with JWT tokens
-
-### Deployment (later phase)
-- Docker
-- Render / Railway (Because they have free tier and we can host easily here)
-
-PostgreSQL is used instead of SQLite because this system requires strong relationships, indexing, and scalability.
+### Key Features:
+- **Authentication**: Secure token-based access using `djangorestframework-simplejwt`.
+- **Permissions**: Granular access control (e.g., only authors can edit their posts).
+- **Serialization**: Optimized data representation including nested community and user details.
+- **Filtering**: Search and filter capabilities for books and boards.
 
 ---
 
-## Core System Design
+## 🛠️ What Needs to be Built (Frontend)
 
-The system is divided into logical modules:
+The frontend is planned as a **React** application that will consume the REST API.
 
-1. Book Registry
-2. Listings (lend / sell / auction)
-3. Transactions (borrow, return, bids)
-4. Communities (discussion space)
-5. Users and ratings
-
-Each module is implemented as a separate Django app for clean architecture.
-
----
-
-## Database Design (High Level)
-
-### Book
-This is the master record of every book in the system.
-
-Fields:
-- Title
-- Author
-- ISBN
-- Genre
-- Description
-- Tags
-- Cover image
-
-Why: A book should exist only once. Multiple users can create listings for the same book.
+### Upcoming Features:
+- **Dashboard**: A vibrant home page showing trending books and active discussions.
+- **Authentication Flow**: User-friendly login and registration forms.
+- **Book Marketplace**: Interface for browsing listings, placing bids, and requesting borrows.
+- **Community Space**: Interactive Reddit-style boards for threaded discussions.
+- **User Profiles**: Personalized views of owned books, transaction history, and ratings.
 
 ---
 
-### Listing
-Represents a user offering a book.
+## � Database Schema
 
-Fields:
-- Book (Foreign Key)
-- Owner (User)
-- Listing type (LEND, SELL, AUCTION)
-- Condition
-- Price (for sell)
-- Minimum bid (for auction)
-- Lending duration
-- Status
+The system uses a relational schema designed to handle books, listings, and community interactions efficiently.
 
-Why: Users do not create books, they create listings of books they own.
+### 1. User (Built-in)
+- Default Django auth User stores credentials and profile information.
 
----
+### 2. Book
+- `title` (CharField): The title of the book.
+- `author` (CharField): The author of the book.
+- `condition` (CharField): Current physical state of the book.
+- `price` (DecimalField): Listing price (optional).
+- `status` (ChoiceField): available, sold, or borrowed.
+- `owner` (ForeignKey): Reference to the User who owns the book.
+- `created_at` (DateTimeField): Timestamp of listing creation.
 
-### Transaction
-Handles borrowing and buying flow.
+### 3. DiscussionBoard
+- `name` (CharField): Unique name for the community.
+- `description` (TextField): About the board.
+- `members` (ManyToManyField): Users who have joined the board via `BoardMembership`.
 
-Fields:
-- Listing
-- Borrower/Buyer
-- Status (requested, approved, returned, completed)
-- Due date (for lending)
-
-Why: To track the lifecycle of lending and selling.
-
----
-
-### Bid
-Used only for auction listings.
-
-Fields:
-- Listing
-- Bidder
-- Amount
-- Timestamp
-
-Why: To track all bids and determine the winner.
+### 4. Post
+- `content` (TextField): The body of the post.
+- `author` (ForeignKey): The user who created the post.
+- `board` (ForeignKey): The community board where the post is located.
+- `created_at` (DateTimeField): Timestamp of post creation.
 
 ---
 
-### Community
-Discussion group around books, authors, or genres.
+## 🔗 Available Links
 
-Fields:
-- Name
-- Description
-- Creator
-
----
-
-### Post and Comment
-For Reddit-style discussions inside communities.
-
-Why: This keeps users engaged and builds a knowledge network around books.
+| Name | URL | Description |
+| :--- | :--- | :--- |
+| **Admin Panel** | `/admin/` | Manage users, books, and boards (Staff only). |
+| **Base API** | `/api/` | Root for all application endpoints. |
 
 ---
 
-### User Profile and Ratings
-Tracks:
-- Books owned
-- Books lent
-- Books borrowed
-- Ratings from other users
+## ⚙️ Setup Instructions (Backend)
 
-Why: Trust is important in a peer-to-peer lending system.
+Follow these steps to get the backend running locally on Windows.
 
----
+### 1. Prerequisites
+- Python 3.10+
+- PostgreSQL (Ensure it's installed and running)
 
-## Frontend Pages (React)
+### 2. Environment Configuration
+Create a `.env` file in the root directory (refer to `.env.example`) and add your database credentials:
+```env
+DB_NAME=your_db_name
+DB_USER=your_db_user
+DB_PASSWORD=your_db_password
+DB_HOST=127.0.0.1
+DB_PORT=5432
+SECRET_KEY=your_django_secret_key
+```
 
-### Home Page
-Shows active listings and trending communities.
+### 3. Using Virtual Environment (Recommended)
+It is strongly advised to use a virtual environment to manage dependencies:
+```cmd
+python -m venv venv
+venv\Scripts\activate
+```
 
-Why: Entry point where users discover books and discussions.
-
----
-
-### Book Detail Page
-Shows:
-- Book information
-- All listings for that book
-- Related discussions
-
-Why: Book is the central object. Users should see everything related to it in one place.
-
----
-
-### Create Listing Page
-Allows user to select a book and create a lend/sell/auction listing.
-
-Why: This is how inventory enters the system.
-
----
-
-### Listing Detail Page
-Shows listing information with actions:
-- Borrow request
-- Buy now
-- Place bid
-
-Why: Users interact with listings here.
+### 4. Install Dependencies & Run Setup
+Run the setup script to install requirements and apply migrations:
+```cmd
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver
+```
 
 ---
 
-### Auction Page
-Live view of bids for auction listings.
-
-Why: Required to manage real-time bidding experience.
-
----
-
-### Communities Page
-List of all communities.
-
-Why: Users explore discussion spaces.
-
----
-
-### Community Detail Page
-Shows posts and discussions.
-
-Why: Enables Reddit-style interaction.
-
----
-
-### Profile Page
-Shows user activity, listings, transactions, and ratings.
-
-Why: Builds trust and transparency between users.
-
----
-
-## Backend APIs (Django REST)
-
-### Books
-- `GET /api/books/` – List all books
-- `POST /api/books/` – Add a new book
-- `GET /api/books/{id}/` – Book details
-
-Why: Required to maintain the central book registry.
-
----
-
-### Listings
-- `GET /api/listings/` – All listings
-- `POST /api/listings/` – Create listing
-- `GET /api/listings/{id}/` – Listing details
-
-Why: Users interact with listings, not directly with books.
-
----
-
-### Borrow / Buy / Bid Actions
-- `POST /api/listings/{id}/borrow/`
-- `POST /api/listings/{id}/buy/`
-- `POST /api/listings/{id}/bid/`
-
-Why: Special actions that change the state of listings.
-
----
-
-### Transactions
-- `GET /api/transactions/` – User transaction history
-
-Why: To track borrowing and buying lifecycle.
-
----
-
-### Communities
-- `GET /api/communities/`
-- `POST /api/communities/`
-- `GET /api/communities/{id}/`
-
-Why: To create and explore discussion groups.
-
----
-
-### Posts and Comments
-- `POST /api/posts/`
-- `POST /api/comments/`
-
-Why: Enable discussions inside communities.
-
----
-
-### Users
-- `GET /api/profile/`
-- `GET /api/users/{id}/`
-
-Why: Show user activity and ratings.
-
----
-
-## Development Phases
-
-### Phase 1
-Books and Listings
-
-### Phase 2
-Borrowing and Transactions
-
-### Phase 3
-Auction and Bidding
-
-### Phase 4
-Communities and Discussions
-
-### Phase 5
-Search, ratings, notifications, and polishing
-
----
-
-## Why This Architecture
-
-- Clean separation of concerns using Django apps
-- Strong relational modeling with PostgreSQL
-- Scalable API design using REST
-- React provides dynamic and interactive frontend
-- Books remain the central entity across the system
-- Supports lending, selling, bidding, and discussion without mixing logic
-
-This design ensures the project is maintainable, scalable, and suitable as a serious full-stack portfolio project.
+> [!NOTE]
+> AI was used to restructure this README for better understanding and detailing, ensuring a professional and exhaustive overview of the project's current state and roadmap.
