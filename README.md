@@ -69,6 +69,9 @@ The system uses a relational schema designed to handle books, listings, and comm
 | :--- | :--- | :--- |
 | **Admin Panel** | `/admin/` | Manage users, books, and boards (Staff only). |
 | **Base API** | `/api/` | Root for all application endpoints. |
+| **Swagger UI** | `/api/docs/` | Interactive API documentation with testing interface. |
+| **ReDoc** | `/api/redoc/` | Alternative API documentation view. |
+| **OpenAPI Schema** | `/api/schema/` | Machine-readable API schema (JSON). |
 
 ---
 
