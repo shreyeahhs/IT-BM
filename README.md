@@ -1,115 +1,188 @@
 # Book Sharing and Discussion Platform
 
-Welcome to the **Book Sharing and Discussion Platform**, a full-stack web application designed for bibliophiles. This platform allows users to lend, borrow, sell, and bid on niche or rare books while participating in Reddit-style community discussions.
+Full-stack project for posting books, managing your own listings, and chatting in board-based communities.
 
----
+## Tech Stack
 
-## 🚀 What's Built (Backend)
+- Backend: Django + Django REST Framework
+- Database: SQLite (`backend/db.sqlite3`)
+- Frontend: React
+- Auth: DRF token authentication
 
-The backend is fully implemented using **Django** and **Django REST Framework (DRF)**. It features a robust relational database schema managed via **PostgreSQL**.
+## Current Status
 
-### Core Apps:
-- **Users**: Custom user model with JWT-based authentication (Login, Register).
-- **Books**: Management of a central book registry and user-specific book listings.
-- **Boards**: Discussion communities (Boards), Posts, and Comments with nested relationships.
+Both backend and frontend are implemented and connected.
 
-### Key Features:
-- **Authentication**: Secure token-based access using `djangorestframework-simplejwt`.
-- **Permissions**: Granular access control (e.g., only authors can edit their posts).
-- **Serialization**: Optimized data representation including nested community and user details.
-- **Filtering**: Search and filter capabilities for books and boards.
+## Backend Features
 
----
+- User registration and login APIs
+- Token-based authentication
+- Book CRUD with ownership checks
+- Book status updates (available/sold/borrowed)
+- Discussion boards with membership
+- Join/leave board actions
+- Board posts API with member-only posting
 
-## 🛠️ What Needs to be Built (Frontend)
+## Frontend Features
 
-The frontend is planned as a **React** application that will consume the REST API.
+- Login and register pages
+- Register supports first name + last name
+- Full-name greeting in navbar/dashboard/my books
+- Dashboard redesign with card-based layout
+- My Books page with:
+	- Create-book modal
+	- Edit listing inline
+	- Delete listing
+- Book cards show owner username (not numeric ID)
+- Base64 book cover upload and preview support
+- Board page with Discord-inspired UI:
+	- Dark sidebar + channel-like board list
+	- Join/leave state synced with backend membership
+	- Grouped message rows with avatars and timestamps
+	- Empty-channel welcome message
+	- Message composer with Enter-to-send
 
-### Upcoming Features:
-- **Dashboard**: A vibrant home page showing trending books and active discussions.
-- **Authentication Flow**: User-friendly login and registration forms.
-- **Book Marketplace**: Interface for browsing listings, placing bids, and requesting borrows.
-- **Community Space**: Interactive Reddit-style boards for threaded discussions.
-- **User Profiles**: Personalized views of owned books, transaction history, and ratings.
+## Data Model (High Level)
 
----
+- `User` (Django auth user)
+- `Book`
+	- `title`, `author`, `condition`, `price`, `status`, `cover`, `owner`, `created_at`
+- `DiscussionBoard`
+	- `name`, `description`, `members` (through `BoardMembership`)
+- `BoardMembership`
+	- `user`, `board`, `joined_at`
+- `Post`
+	- `content`, `author`, `board`, `created_at`
 
-## � Database Schema
+## Project Structure
 
-The system uses a relational schema designed to handle books, listings, and community interactions efficiently.
-
-### 1. User (Built-in)
-- Default Django auth User stores credentials and profile information.
-
-### 2. Book
-- `title` (CharField): The title of the book.
-- `author` (CharField): The author of the book.
-- `condition` (CharField): Current physical state of the book.
-- `price` (DecimalField): Listing price (optional).
-- `status` (ChoiceField): available, sold, or borrowed.
-- `owner` (ForeignKey): Reference to the User who owns the book.
-- `created_at` (DateTimeField): Timestamp of listing creation.
-
-### 3. DiscussionBoard
-- `name` (CharField): Unique name for the community.
-- `description` (TextField): About the board.
-- `members` (ManyToManyField): Users who have joined the board via `BoardMembership`.
-
-### 4. Post
-- `content` (TextField): The body of the post.
-- `author` (ForeignKey): The user who created the post.
-- `board` (ForeignKey): The community board where the post is located.
-- `created_at` (DateTimeField): Timestamp of post creation.
-
----
-
-## 🔗 Available Links
-
-| Name | URL | Description |
-| :--- | :--- | :--- |
-| **Admin Panel** | `/admin/` | Manage users, books, and boards (Staff only). |
-| **Base API** | `/api/` | Root for all application endpoints. |
-| **Swagger UI** | `/api/docs/` | Interactive API documentation with testing interface. |
-| **ReDoc** | `/api/redoc/` | Alternative API documentation view. |
-| **OpenAPI Schema** | `/api/schema/` | Machine-readable API schema (JSON). |
-
----
-
-## ⚙️ Setup Instructions (Backend)
-
-Follow these steps to get the backend running locally on Windows.
-
-### 1. Prerequisites
-- Python 3.10+
-- PostgreSQL (Ensure it's installed and running)
-
-### 2. Environment Configuration
-Create a `.env` file in the root directory (refer to `.env.example`) and add your database credentials:
-```env
-DB_NAME=your_db_name
-DB_USER=your_db_user
-DB_PASSWORD=your_db_password
-DB_HOST=127.0.0.1
-DB_PORT=5432
-SECRET_KEY=your_django_secret_key
+```text
+backend/
+	manage.py
+	requirements.txt
+	db.sqlite3
+	bookshare/
+	books/
+	boards/
+	users/
+	seed_data/
+		covers/
+frontend/
 ```
 
-### 3. Using Virtual Environment (Recommended)
-It is strongly advised to use a virtual environment to manage dependencies:
+## Local Setup (Windows)
+
+### 1. Create Virtual Environment
+
+```powershell
+cd backend
+python -m venv ..\venv
+```
+
+### 2. Activate Virtual Environment
+
+```powershell
+cd ..
+.\venv\Scripts\Activate.ps1
+```
+
+If you get this error:
+
+`running scripts is disabled on this system`
+
+Use one of the following:
+
+Temporary (current shell only):
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\venv\Scripts\Activate.ps1
+```
+
+Persistent for current user:
+
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+.\venv\Scripts\Activate.ps1
+```
+
+If policy is managed by your organization, use alternatives:
+
 ```cmd
-python -m venv venv
-venv\Scripts\activate
+venv\Scripts\activate.bat
 ```
 
-### 4. Install Dependencies & Run Setup
-Run the setup script to install requirements and apply migrations:
-```cmd
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py runserver
+or run Python directly without activation:
+
+```powershell
+.\venv\Scripts\python.exe backend\manage.py runserver
 ```
 
----
+### 3. Install Backend Dependencies
 
-> [!NOTE]
-> AI was used to restructure this README for better understanding and detailing, ensuring a professional and exhaustive overview of the project's current state and roadmap.
+```powershell
+cd backend
+..\venv\Scripts\python.exe -m pip install -r requirements.txt
+```
+
+### 4. Run Migrations
+
+```powershell
+..\venv\Scripts\python.exe manage.py migrate
+```
+
+### 5. Start Backend
+
+```powershell
+..\venv\Scripts\python.exe manage.py runserver
+```
+
+Backend runs at `http://127.0.0.1:8000/`.
+
+### 6. Start Frontend
+
+Open a second terminal:
+
+```powershell
+cd frontend
+npm install
+npm start
+```
+
+Frontend runs at `http://localhost:3000/`.
+
+## Demo Seed Data
+
+This project includes seed scripts for demo users/books/boards/chats.
+
+### Generate 10 Cover Images
+
+```powershell
+cd backend
+..\venv\Scripts\python.exe generate_seed_images.py
+```
+
+### Seed Database
+
+```powershell
+cd backend
+..\venv\Scripts\python.exe manage.py seed_db
+```
+
+Seed command creates:
+
+- 3 users
+- 10 books (with base64 covers)
+- 3 boards
+- sample posts in each board
+
+Default test credentials:
+
+- `shreyas / testpass123`
+- `kunli / testpass123`
+- `shuao / testpass123`
+
+## API Base
+
+- Base URL: `http://127.0.0.1:8000/api/`
+
