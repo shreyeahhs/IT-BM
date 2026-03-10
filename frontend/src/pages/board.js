@@ -3,6 +3,7 @@ import Navbar from "../components/navbar";
 import PostCard from "../components/postcard";
 import Alert from "../components/alert";
 import "../App.css";
+import { API_BASE_URL, getAuthConfig } from "../api";
 
 export default function Boards({ user, onLogout }) {
     const [boards, setBoards] = useState([]);
@@ -20,12 +21,8 @@ export default function Boards({ user, onLogout }) {
     useEffect(() => {
         const fetchBoards = async () => {
             try {
-                const res = await fetch("http://localhost:8000/api/boards/", {
-                    headers: {
-                        "Authorization": `Token ${localStorage.getItem("token")}`,
-                        "Content-Type": "application/json",
-                        "Accept": "application/json"
-                    }
+                const res = await fetch(`${API_BASE_URL}/boards/`, {
+                    headers: getAuthConfig().headers
                 });
                 const data = await res.json();
                 console.log(data);
@@ -40,20 +37,16 @@ export default function Boards({ user, onLogout }) {
     // Join board
     const joinBoard = async (board) => {
         try {
-            const res = await fetch(`http://localhost:8000/api/boards/${board.id}/join/`, {
+            const res = await fetch(`${API_BASE_URL}/boards/${board.id}/join/`, {
                 method: "POST",
-                headers: {
-                    "Authorization": `Token ${localStorage.getItem("token")}`,
-                    "Content-Type": "application/json",
-                    "Accept": "application/json"
-                },
+                headers: getAuthConfig().headers,
             });
             const data = await res.json();
             if (res.ok) {
                 showAlert("success", "You joined the board!");
                 setBoards(prev => prev.map(b =>
                     b.id === board.id
-                        ? { ...b, members: [...(b.members || []), user], member_count: (b.member_count || 0) + 1 }
+                        ? { ...b, is_member: true, member_count: (b.member_count || 0) + 1 }
                         : b
                 ));
                 setCurrentBoard(prev => prev && prev.id === board.id ? {
@@ -71,20 +64,16 @@ export default function Boards({ user, onLogout }) {
     // Leave board
     const leaveBoard = async (board) => {
         try {
-            const res = await fetch(`http://localhost:8000/api/boards/${board.id}/leave/`, {
+            const res = await fetch(`${API_BASE_URL}/boards/${board.id}/leave/`, {
                 method: "POST",
-                headers: {
-                    "Authorization": `Token ${localStorage.getItem("token")}`,
-                    "Content-Type": "application/json",
-                    "Accept": "application/json"
-                },
+                headers: getAuthConfig().headers,
             });
             const data = await res.json();
             if (res.ok) {
                 showAlert("success", "You left the board!");
                 setBoards(prev => prev.map(b =>
                     b.id === board.id
-                        ? { ...b, members: b.members?.filter(u => u !== user), member_count: Math.max((b.member_count || 1) - 1, 0) }
+                        ? { ...b, is_member: false, member_count: Math.max((b.member_count || 1) - 1, 0) }
                         : b
                 ));
                 setCurrentBoard(prev => prev && prev.id === board.id ? {
@@ -102,19 +91,15 @@ export default function Boards({ user, onLogout }) {
     };
     const enterBoard = async (board) => {
         try {
-            const res = await fetch(`http://localhost:8000/api/boards/${board.id}/posts/`, {
-                headers: {
-                    "Authorization": `Token ${localStorage.getItem("token")}`,
-                    "Content-Type": "application/json",
-                    "Accept": "application/json"
-                },
+            const res = await fetch(`${API_BASE_URL}/boards/${board.id}/posts/`, {
+                headers: getAuthConfig().headers,
             });
 
             const posts = res.ok ? await res.json() : [];
             console.log(posts);
 
-            // Check if current user is a member
-            const isMember = board.members?.includes(user) || false;
+            // is_member comes from the serializer (already set on board object)
+            const isMember = board.is_member || false;
 
             setCurrentBoard({
                 ...board,
@@ -165,13 +150,9 @@ export default function Boards({ user, onLogout }) {
     // };
     const addPost = async (board, content) => {
         try {
-            const res = await fetch(`http://localhost:8000/api/boards/${board.id}/posts/`, {
+            const res = await fetch(`${API_BASE_URL}/boards/${board.id}/posts/`, {
                 method: "POST",
-                headers: {
-                    "Authorization": `Token ${localStorage.getItem("token")}`,
-                    "Content-Type": "application/json",
-                    "Accept": "application/json"
-                },
+                headers: getAuthConfig().headers,
                 body: JSON.stringify({ content, }),
             });
             const data = await res.json();
@@ -197,13 +178,9 @@ export default function Boards({ user, onLogout }) {
     };
     const createBoard = async () => {
         try {
-            const res = await fetch("http://localhost:8000/api/boards/", {
+            const res = await fetch(`${API_BASE_URL}/boards/`, {
                 method: "POST",
-                headers: {
-                    "Authorization": `Token ${localStorage.getItem("token")}`,
-                    "Content-Type": "application/json",
-                    "Accept": "application/json"
-                },
+                headers: getAuthConfig().headers,
                 body: JSON.stringify({
                     name: newBoardName,
                     description: newBoardDesc
@@ -296,10 +273,11 @@ export default function Boards({ user, onLogout }) {
                 />
             )}
 
-            <div className="boards-layout">
+            <main className="app-page-shell board-page-shell">
+            <div className="boards-layout app-board-layout">
 
                 {/* ===== SIDEBAR ===== */}
-                <div className="boards-sidebar">
+                <div className="boards-sidebar app-board-sidebar">
                     <h3>
                         Boards
                         <button
@@ -363,7 +341,7 @@ export default function Boards({ user, onLogout }) {
                 </div>
 
                 {/* ===== MAIN CONTENT ===== */}
-                <div className="boards-main">
+                <div className="boards-main app-board-main">
                     {currentBoard ? (
                         <>
                             <div className="board-header">
@@ -389,10 +367,40 @@ export default function Boards({ user, onLogout }) {
                             />
                         </>
                     ) : (
-                        <h2 className="page-name">Select a board</h2>
+                        <div className="dc-no-board">
+                            <div className="dc-no-board-icon">#</div>
+                            <h2 className="dc-no-board-title">Welcome to Boards</h2>
+                            <p className="dc-no-board-sub">
+                                Pick a board from the left to jump into a conversation — or create your own.
+                            </p>
+                            <div className="dc-no-board-tips">
+                                <div className="dc-tip">
+                                    <span className="dc-tip-icon">👋</span>
+                                    <div>
+                                        <strong>Join a board</strong>
+                                        <p>Select any board on the left, then hit <em>Join</em> to become a member.</p>
+                                    </div>
+                                </div>
+                                <div className="dc-tip">
+                                    <span className="dc-tip-icon">✏️</span>
+                                    <div>
+                                        <strong>Start a conversation</strong>
+                                        <p>Once you're a member, type a message at the bottom and press Enter.</p>
+                                    </div>
+                                </div>
+                                <div className="dc-tip">
+                                    <span className="dc-tip-icon">➕</span>
+                                    <div>
+                                        <strong>Create a board</strong>
+                                        <p>Click the <em>+</em> next to "Boards" in the sidebar to start your own.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     )}
                 </div>
             </div>
+            </main>
         </>
     );
 

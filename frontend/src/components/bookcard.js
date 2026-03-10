@@ -1,14 +1,28 @@
 import React, { useState } from "react";
 import "../App.css";
 
-function BookCard({ book, currentUser, id, onDelete, onUpdateStatus }) {
+function BookCard({ book, currentUser, id, onDelete, onUpdateStatus, onEdit }) {
 
   const [showModal, setShowModal] = useState(false);
   const [rating, setRating] = useState(4);
-  console.log(id);
-  const isOwner = id === book.owner;
-  console.log(book.owner);
-  console.log(isOwner);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({
+    title: book.title,
+    author: book.author,
+    condition: book.condition,
+    price: book.price,
+    status: book.status,
+  });
+
+  const isOwner = Number(id) === Number(book.owner) || currentUser === book.owner_username;
+  const canManage = isOwner && (onDelete || onUpdateStatus || onEdit);
+
+  const handleSaveEdit = async () => {
+    if (!onEdit) return;
+    await onEdit(book.id, editForm);
+    setIsEditing(false);
+    setShowModal(false);
+  };
 
   return (
     <>
@@ -49,18 +63,50 @@ function BookCard({ book, currentUser, id, onDelete, onUpdateStatus }) {
               ))}
             </div>
 
-            <p><strong>Author:</strong> {book.author}</p>
-            <p><strong>Condition:</strong> {book.condition}</p>
-            <p><strong>Price:</strong> ${book.price}</p>
-            <p><strong>Owner:</strong> {book.owner}</p>
+            {isEditing ? (
+              <div>
+                <input
+                  className="input-field"
+                  value={editForm.title}
+                  onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                  placeholder="Title"
+                />
+                <input
+                  className="input-field"
+                  value={editForm.author}
+                  onChange={(e) => setEditForm({ ...editForm, author: e.target.value })}
+                  placeholder="Author"
+                />
+                <input
+                  className="input-field"
+                  value={editForm.condition}
+                  onChange={(e) => setEditForm({ ...editForm, condition: e.target.value })}
+                  placeholder="Condition"
+                />
+                <input
+                  className="input-field"
+                  type="number"
+                  value={editForm.price}
+                  onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
+                  placeholder="Price"
+                />
+              </div>
+            ) : (
+              <>
+                <p><strong>Author:</strong> {book.author}</p>
+                <p><strong>Condition:</strong> {book.condition}</p>
+                <p><strong>Price:</strong> ${book.price}</p>
+                <p><strong>Owner:</strong> {book.owner_username || book.owner}</p>
+              </>
+            )}
             <p className="date">
               {new Date(book.created_at).toLocaleString()}
             </p>
 
             {/* OWNER ACTIONS */}
-            {isOwner && (
+            {canManage && (
               <div className="book-actions">
-                {book.status !== "available" && (
+                {!isEditing && onUpdateStatus && book.status !== "available" && (
                   <button
                     className="available-btn"
                     onClick={() => onUpdateStatus(book.id, "available")}
@@ -68,21 +114,34 @@ function BookCard({ book, currentUser, id, onDelete, onUpdateStatus }) {
                     Mark Available
                   </button>
                 )}
-                {book.status !== "sold" && (
+                {!isEditing && onUpdateStatus && book.status !== "sold" && (
                   <button className="sold-btn" onClick={() => onUpdateStatus(book.id, "sold")}>
                     Mark as Sold
                   </button>
                 )}
 
-                {book.status !== "borrowed" && (
+                {!isEditing && onUpdateStatus && book.status !== "borrowed" && (
                   <button className="borrow-btn" onClick={() => onUpdateStatus(book.id, "borrowed")}  >
                     Mark Borrowed
                   </button>
                 )}
 
-                <button className="delete-btn" onClick={() => onDelete(book.id)}>
+                {onEdit && !isEditing && (
+                  <button className="available-btn" onClick={() => setIsEditing(true)}>
+                    Edit
+                  </button>
+                )}
+
+                {onEdit && isEditing && (
+                  <>
+                    <button className="sold-btn" onClick={handleSaveEdit}>Save</button>
+                    <button className="borrow-btn" onClick={() => setIsEditing(false)}>Cancel</button>
+                  </>
+                )}
+
+                {onDelete && <button className="delete-btn" onClick={() => onDelete(book.id)}>
                   Delete
-                </button>
+                </button>}
               </div>
 
             )}

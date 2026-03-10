@@ -2,17 +2,20 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import "../App.css";
 import logo from "../assets/logo2.png";
-import axios from "axios";
+import { api } from "../api";
 
 function Register() {
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-   const [, setAlert] = useState({ type: "", message: "" });
+  const [alert, setAlert] = useState({ type: "", message: "" });
 
   const navigate = useNavigate();
 
@@ -28,11 +31,15 @@ function Register() {
       return;
     }
 
+    setIsSubmitting(true);
+
     try {
 
-      const res = await axios.post(
-        "http://127.0.0.1:8000/api/register/",
+      const res = await api.post(
+        "/register/",
         {
+          first_name: firstName,
+          last_name: lastName,
           username: username,
           password: password
         }
@@ -41,6 +48,9 @@ function Register() {
       // save token
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("username", res.data.user.username);
+      localStorage.setItem("id", res.data.user.id);
+      localStorage.setItem("first_name", res.data.user.first_name || "");
+      localStorage.setItem("last_name", res.data.user.last_name || "");
 
       setAlert({ type: "success", message: "Registered Successfully!" });
 
@@ -49,7 +59,13 @@ function Register() {
       }, 1500);
 
     } catch (err) {
-      setAlert({ type: "error", message: "Registration failed" });
+      const data = err?.response?.data;
+      const message =
+        (data && (data.username?.[0] || data.password?.[0] || data.email?.[0] || data.detail)) ||
+        "Registration failed";
+      setAlert({ type: "error", message });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -63,12 +79,28 @@ function Register() {
 
       {/* RIGHT SIDE */}
       <div className="right-panel">
-        <div className="card">
+        <div className="card auth-card-modern">
           <h2>Register</h2>
 
           <input
             type="text"
-            placeholder="Email Address"
+            placeholder="First Name"
+            className="input-field"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+          />
+
+          <input
+            type="text"
+            placeholder="Last Name"
+            className="input-field"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+          />
+
+          <input
+            type="text"
+            placeholder="Username"
             className="input-field"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
@@ -108,9 +140,18 @@ function Register() {
             </span>
           </div>
 
-          <button className="btn btn-register" onClick={handleRegister}>
-            Register
+          <button className="btn btn-register auth-submit-btn" onClick={handleRegister}>
+            {isSubmitting ? "Registering..." : "Register"}
           </button>
+
+          {alert.message && (
+            <div className={`custom-alert ${alert.type}`}>
+              <span>{alert.message}</span>
+              <button className="close-btn" onClick={() => setAlert({ type: "", message: "" })}>
+                &times;
+              </button>
+            </div>
+          )}
 
           <p>
             Already have an account? <Link to="/">Login here</Link>

@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import "../App.css";
 import Navbar from "../components/navbar";
-import axios from "axios";
+import { api, getAuthConfig } from "../api";
+import { Button } from "../components/ui/button";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../components/ui/card";
 
-export default function CreateBook({ user, onAddBook }) {
+export default function CreateBook({ embedded = false, onCreated, onCancel }) {
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
   const [condition, setCondition] = useState("New");
@@ -32,25 +34,17 @@ export default function CreateBook({ user, onAddBook }) {
   }
 
   try {
-    const token = localStorage.getItem("token");
-    console.log(token);
-    console.log(document.cookie); 
-    // console.log(title);
-    await axios.post(
-      "http://127.0.0.1:8000/api/books/",
+    await api.post(
+      "/books/",
       {
         title: title,
         author: author,
         condition: condition,
         price: price,
-        status: status
+        status: status,
+        cover: cover
       },
-      {
-        headers: {
-          Authorization: `Token ${token}`,
-          "Content-Type": "application/json"
-        }
-      }
+      getAuthConfig()
     );
 
     setAlert({ type: "success", message: "Book added successfully!" });
@@ -58,6 +52,8 @@ export default function CreateBook({ user, onAddBook }) {
     setTitle("");
     setAuthor("");
     setPrice("");
+    setCover(null);
+    if (onCreated) onCreated();
 
   } catch (error) {
     setAlert({ type: "error", message: "Failed to add book" });
@@ -66,12 +62,14 @@ export default function CreateBook({ user, onAddBook }) {
   setTimeout(() => setAlert({ type: "", message: "" }), 3000);
 };
 
-  return (
+  const formContent = (
     <>
-      <Navbar />
-      <div className="boards-create">
-        <h2 className="page-name">Create Book</h2>
-        <div className="card">
+      <Card className="app-form-card">
+          <CardHeader>
+            <CardTitle>Create Book</CardTitle>
+            <CardDescription>Add a listing with clear details and an optional cover preview.</CardDescription>
+          </CardHeader>
+          <CardContent>
           <div className="input-row">
             <p className="input-label">Book Title <span className="required">*</span></p>
             <input className="input-field" placeholder="Enter book title" value={title} onChange={(e) => setTitle(e.target.value)} />
@@ -109,17 +107,33 @@ export default function CreateBook({ user, onAddBook }) {
               <img src={cover} alt="Preview" className="cover-preview" />
             )}
           </div>
-          <button className="btn-create" onClick={handleSubmit}>Add Book</button>
-        </div >
-        {alert.message && (
-          <div className={`custom-alert ${alert.type}`}>
-            <span>{alert.message}</span>
-            <button className="close-btn" onClick={() => setAlert({ type: "", message: "" })}>
-              &times;
-            </button>
-          </div>
-        )}
-      </div >
+            <div className="app-form-actions">
+              <Button className="app-form-submit" onClick={handleSubmit}>Add Book</Button>
+              {embedded && (
+                <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>
+              )}
+            </div>
+          </CardContent>
+      </Card>
+      {alert.message && (
+        <div className={`custom-alert ${alert.type}`}>
+          <span>{alert.message}</span>
+          <button className="close-btn" onClick={() => setAlert({ type: "", message: "" })}>
+            &times;
+          </button>
+        </div>
+      )}
+    </>
+  );
+
+  if (embedded) {
+    return formContent;
+  }
+
+  return (
+    <>
+      <Navbar />
+      <main className="app-page-shell">{formContent}</main>
     </>
   );
 }

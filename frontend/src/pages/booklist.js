@@ -1,21 +1,14 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import BookCard from "../components/bookcard";
-function BookList() {
+import { api, getAuthConfig } from "../api";
+function BookList({ embedded = false }) {
   const [books, setBooks] = useState([]);
   const [search, setSearch] = useState("");
   // Token header
-  const config = {
-    headers: {
-      Authorization: `Token ${localStorage.getItem("token")}`,
-      "Content-Type": "application/json"
-    },
-  };
-
   // 1️⃣ Fetch all books from backend
   const fetchBooks = async () => {
     try {
-      const response = await axios.get("http://127.0.0.1:8000/api/books/", config);
+      const response = await api.get("/books/", getAuthConfig());
       setBooks(response.data);
     } catch (error) {
       console.error("Error fetching books:", error);
@@ -34,7 +27,7 @@ function BookList() {
   // fetch books on component mount
   useEffect(() => {
     fetchBooks();
-  }, [config]);
+  }, []);
   // const [books, setBooks] = 
   // useState([
   //   {
@@ -79,8 +72,8 @@ function BookList() {
   // );
 
   return (
-    <div>
-      <h2 className="page-name">Book Listings</h2>
+    <div className={embedded ? "booklist-embedded" : ""}>
+      {!embedded && <h2 className="page-name">Book Listings</h2>}
       <input
         className="search-bar"
         placeholder="Search by title or author..."

@@ -3,10 +3,17 @@ from .models import DiscussionBoard, BoardMembership, Post
 
 class DiscussionBoardSerializer(serializers.ModelSerializer):
     member_count = serializers.IntegerField(source='members.count', read_only=True)
+    is_member = serializers.SerializerMethodField()
+
+    def get_is_member(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return obj.members.filter(pk=request.user.pk).exists()
+        return False
 
     class Meta:
         model = DiscussionBoard
-        fields = ['id', 'name', 'description', 'member_count']
+        fields = ['id', 'name', 'description', 'member_count', 'is_member']
 
 class BoardMembershipSerializer(serializers.ModelSerializer):
     username = serializers.ReadOnlyField(source='user.username')

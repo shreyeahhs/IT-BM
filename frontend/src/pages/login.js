@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import "../App.css";
 import logo from "../assets/logo2.png";
-import axios from "axios";
+import { api } from "../api";
 function Login({ setUser }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -13,8 +13,8 @@ function Login({ setUser }) {
   const handleLogin = async () => {
 
     try {
-      const res = await axios.post(
-        "http://127.0.0.1:8000/api/login/",
+      const res = await api.post(
+        "/login/",
         {
           username: username,
           password: password
@@ -25,6 +25,9 @@ function Login({ setUser }) {
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("username", res.data.username);
       localStorage.setItem("id", res.data.user_id);
+      localStorage.setItem("first_name", res.data.first_name || "");
+      localStorage.setItem("last_name", res.data.last_name || "");
+      if (setUser) setUser(res.data.username);
 
       setAlert({ type: "success", message: "Login successful!" });
       setUsername(username);
@@ -50,7 +53,7 @@ function Login({ setUser }) {
       </div>
 
       <div className="right-panel">
-        <div className="card">
+        <div className="card auth-card-modern">
           <h2>Login</h2>
 
           <input type="text" placeholder="Username" className="input-field" onChange={(e) => setUsername(e.target.value)} />
@@ -61,7 +64,7 @@ function Login({ setUser }) {
             onChange={(e) => setPassword(e.target.value)}
           />
 
-          <button className="btn btn-login" onClick={handleLogin}>
+          <button className="btn btn-login auth-submit-btn" onClick={handleLogin}>
             Login
           </button>
           {alert.message && (
