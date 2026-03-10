@@ -1,0 +1,400 @@
+import React, { useState, useEffect } from "react";
+import Navbar from "../components/navbar";
+import PostCard from "../components/postcard";
+import Alert from "../components/alert";
+import "../App.css";
+
+export default function Boards({ user, onLogout }) {
+    const [boards, setBoards] = useState([]);
+    const [currentBoard, setCurrentBoard] = useState(null);
+    const [showCreateBoard, setShowCreateBoard] = useState(false);
+    const [newBoardName, setNewBoardName] = useState("");
+    const [newBoardDesc, setNewBoardDesc] = useState("");
+    const [alert, setAlert] = useState({ type: "", message: "" });
+
+    const showAlert = (type, message) => {
+        setAlert({ type, message });
+        setTimeout(() => setAlert({ type: "", message: "" }), 3000); // auto-hide after 3s
+    };
+    // Load boards from Django
+    useEffect(() => {
+        const fetchBoards = async () => {
+            try {
+                const res = await fetch("http://localhost:8000/api/boards/", {
+                    headers: {
+                        "Authorization": `Token ${localStorage.getItem("token")}`,
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    }
+                });
+                const data = await res.json();
+                console.log(data);
+                setBoards(data.map(b => ({ ...b, posts: undefined })));
+            } catch (err) {
+                console.error("Error fetching boards:", err);
+            }
+        };
+        fetchBoards();
+    }, []);
+
+    // Join board
+    const joinBoard = async (board) => {
+        try {
+            const res = await fetch(`http://localhost:8000/api/boards/${board.id}/join/`, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Token ${localStorage.getItem("token")}`,
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showAlert("success", "You joined the board!");
+                setBoards(prev => prev.map(b =>
+                    b.id === board.id
+                        ? { ...b, members: [...(b.members || []), user], member_count: (b.member_count || 0) + 1 }
+                        : b
+                ));
+                setCurrentBoard(prev => prev && prev.id === board.id ? {
+                    ...prev,
+                    is_member: true
+                } : prev);
+            } else {
+                showAlert("error", data.status || data.error || "Error joining board");
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    // Leave board
+    const leaveBoard = async (board) => {
+        try {
+            const res = await fetch(`http://localhost:8000/api/boards/${board.id}/leave/`, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Token ${localStorage.getItem("token")}`,
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showAlert("success", "You left the board!");
+                setBoards(prev => prev.map(b =>
+                    b.id === board.id
+                        ? { ...b, members: b.members?.filter(u => u !== user), member_count: Math.max((b.member_count || 1) - 1, 0) }
+                        : b
+                ));
+                setCurrentBoard(prev => prev && prev.id === board.id ? {
+                    ...prev,
+                    is_member: false,
+                    posts: []
+                } : prev);
+                if (currentBoard?.id === board.id) setCurrentBoard(null);
+            } else {
+                showAlert("error", data.status || data.error || "Error leaving board");
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
+    const enterBoard = async (board) => {
+        try {
+            const res = await fetch(`http://localhost:8000/api/boards/${board.id}/posts/`, {
+                headers: {
+                    "Authorization": `Token ${localStorage.getItem("token")}`,
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+            });
+
+            const posts = res.ok ? await res.json() : [];
+            console.log(posts);
+
+            // Check if current user is a member
+            const isMember = board.members?.includes(user) || false;
+
+            setCurrentBoard({
+                ...board,
+                posts: posts,
+                is_member: isMember
+            });
+
+            // keep boards array consistent
+            setBoards(prevBoards =>
+                prevBoards.map(b =>
+                    b.id === board.id ? { ...b, posts: posts } : b
+                )
+            );
+
+        } catch (err) {
+            console.error(err);
+        }
+    };
+    //     if (res.status === 403) {
+    //         // user is NOT a member
+    //         setCurrentBoard({
+    //             ...board,
+    //             posts: [],
+    //             is_member: false
+    //         });
+    //         return;
+    //     }
+
+
+    //     const posts = await res.json();
+    //     // console.log(posts);
+    //     // 1. Update currentBoard
+    //     setCurrentBoard({
+    //         ...board,
+    //         posts: posts,
+    //         is_member: true
+    //     });
+
+    //     // 2. Update boards array to keep posts consistent
+    //     setBoards(prevBoards =>
+    //         prevBoards.map(b =>
+    //             b.id === board.id ? { ...b, posts: posts } : b
+    //         )
+    //     );
+    // } catch (err) {
+    //     console.error(err);
+    // }
+    // };
+    const addPost = async (board, content) => {
+        try {
+            const res = await fetch(`http://localhost:8000/api/boards/${board.id}/posts/`, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Token ${localStorage.getItem("token")}`,
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify({ content, }),
+            });
+            const data = await res.json();
+            
+            if (res.ok) {
+                showAlert("success", "Post Successfully!");
+                // Update only the current board
+                setCurrentBoard(prev => ({
+                    ...prev,
+                    posts: [data, ...prev.posts]
+                }));
+
+                // Update boards array for consistency
+                setBoards(prev => prev.map(b =>
+                    b.id === board.id ? { ...b, posts: [data, ...(b.posts || [])] } : b
+                ));
+            } else {
+                showAlert("error", data.error || "Error posting message");
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
+    const createBoard = async () => {
+        try {
+            const res = await fetch("http://localhost:8000/api/boards/", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Token ${localStorage.getItem("token")}`,
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify({
+                    name: newBoardName,
+                    description: newBoardDesc
+                }),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setBoards(prev => [...prev, data]);
+                setNewBoardName("");
+                setNewBoardDesc("");
+                showAlert("success", "Board created!");
+            } else {
+                showAlert("error", data.error || "Error creating board");
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    // useEffect(() => {
+    //     const saved = JSON.parse(localStorage.getItem("boards")) || [];
+    //     if (!saved || saved.length === 0) {
+    //         const defaultBoards = [
+    //             {
+    //                 name: "Fantasy Lovers",
+    //                 description: "Discuss fantasy novels, magical worlds, and epic adventures.",
+    //                 members: [],
+    //                 posts: [
+    //                     {
+    //                         author: "admin",Welcome to Fantasy Lovers board!
+    //                         content: "",
+    //                         created_at: new Date().toLocaleString()
+    //                     }
+    //                 ]
+    //             },
+    //             {
+    //                 name: "Programming Books",
+    //                 description: "Talk about coding, software development, and tech books.",
+    //                 members: [],
+    //                 posts: [
+    //                     {
+    //                         author: "admin",
+    //                         content: "Share your favorite programming book here!",
+    //                         created_at: new Date().toLocaleString()
+    //                     }
+    //                 ]
+    //             },
+    //             {
+    //                 name: "Second-Hand Market",
+    //                 description: "Buy, sell, or exchange second-hand books.",
+    //                 members: [],
+    //                 posts: [
+    //                     {
+    //                         author: "admin",
+    //                         content: "Post books you want to sell or borrow.",
+    //                         created_at: new Date().toLocaleString()
+    //                     }
+    //                 ]
+    //             },
+    //             {
+    //                 name: "Exam Preparation",
+    //                 description: "Discuss textbooks and revision materials for exams.",
+    //                 members: [],
+    //                 posts: [
+    //                     {
+    //                         author: "admin",
+    //                         content: "Share exam tips and recommended books!",
+    //                         created_at: new Date().toLocaleString()
+    //                     }
+    //                 ]
+    //             }
+    //         ];
+
+    //         setBoards(defaultBoards);
+    //         localStorage.setItem("boards", JSON.stringify(defaultBoards));
+    //     } else {
+    //         setBoards(saved);
+    //     }
+    // }, []);
+
+
+    return (
+        <>
+            <Navbar user={user} onLogout={onLogout} />
+            {alert.message && (
+                <Alert
+                    type={alert.type}
+                    message={alert.message}
+                    onClose={() => setAlert({ type: "", message: "" })}
+                />
+            )}
+
+            <div className="boards-layout">
+
+                {/* ===== SIDEBAR ===== */}
+                <div className="boards-sidebar">
+                    <h3>
+                        Boards
+                        <button
+                            className="add-board-btn"
+                            onClick={() => setShowCreateBoard(true)}
+                        >
+                            +
+                        </button>
+                    </h3>
+
+                    {boards.map(b => (
+                        <div
+                            key={b.id}
+                            className={`sidebar-item ${currentBoard?.id === b.id ? "active" : ""}`}
+                            onClick={() => enterBoard(b)}
+                        >
+                            <span>{b.name}</span>
+                            <span className="member-badge">{b.member_count || 0}</span>
+                        </div>
+                    ))}
+                    {showCreateBoard && (
+                        <div className="modal-overlay" onClick={() => setShowCreateBoard(false)}>
+                            <div className="modal-content" onClick={e => e.stopPropagation()}>
+                                <div className="modal-header">
+                                    <h3>Create Board</h3>
+                                    <button
+                                        className="close-btn"
+                                        onClick={() => setShowCreateBoard(false)}
+                                    >
+                                        ✖
+                                    </button>
+                                </div>
+
+                                <div className="modal-body">
+                                    <label htmlFor="board-name">Board Name</label>
+                                    <input
+                                        id="board-name"
+                                        type="text"
+                                        placeholder="Enter board name"
+                                        value={newBoardName}
+                                        onChange={e => setNewBoardName(e.target.value)}
+                                    />
+
+                                    <label htmlFor="board-desc">Board Description</label>
+                                    <input
+                                        id="board-desc"
+                                        type="text"
+                                        placeholder="Enter board description"
+                                        value={newBoardDesc}
+                                        onChange={e => setNewBoardDesc(e.target.value)}
+                                    />
+                                </div>
+
+                                <div className="modal-footer">
+                                    <button onClick={createBoard}>Create</button>
+                                    <button onClick={() => setShowCreateBoard(false)}>Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* ===== MAIN CONTENT ===== */}
+                <div className="boards-main">
+                    {currentBoard ? (
+                        <>
+                            <div className="board-header">
+                                <h2>{currentBoard.name}</h2>
+
+                                {currentBoard?.is_member ? (
+                                    <button className="leave-btn" onClick={() => leaveBoard(currentBoard)}>
+                                        Leave
+                                    </button>
+                                ) : (
+                                    <button className="join-btn-animated" onClick={() => joinBoard(currentBoard)}>
+                                        Join
+                                    </button>
+                                )}
+                            </div>
+
+                            <PostCard
+                                board={currentBoard}
+                                user={user}
+                                addPost={(content) => addPost(currentBoard, content)}
+                                posts={currentBoard?.posts || []} // pass posts as prop
+
+                            />
+                        </>
+                    ) : (
+                        <h2 className="page-name">Select a board</h2>
+                    )}
+                </div>
+            </div>
+        </>
+    );
+
+
+}
