@@ -7,6 +7,7 @@ import Register from "./pages/register";
 import Dashboard from "./pages/dashboard";
 import Boards from "./pages/board";
 import MyBooks from "./pages/mybook";
+import BookDetail from "./pages/BookDetail";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -23,6 +24,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard user={user} />} />
         <Route path="/board" element={<Boards user={user} />} />
         <Route path="/mybook" element={<MyBooks />} />
+        <Route path="/book/:id" element={<BookDetail user={user} />} />
 
       </Routes>
     </Router>
