@@ -104,11 +104,12 @@ function BookCard({ book, currentUser, id, onDelete, onUpdateStatus, onEdit }) {
               {new Date(book.created_at).toLocaleString()}
             </p>
             {/* Book Detail Entrance */}
-            <div style={{ marginTop: "20px" }}>
-              <Link 
-                to={`/book/${book.id}`} 
-                className="available-btn" 
-                style={{ 
+            {!isEditing && (
+              <div style={{ marginTop: "20px" }}>
+                <Link 
+                  to={`/book/${book.id}`} 
+                  className="available-btn" 
+                  style={{ 
                   display: "block", 
                   textAlign: "center", 
                   textDecoration: "none", 
@@ -119,10 +120,11 @@ function BookCard({ book, currentUser, id, onDelete, onUpdateStatus, onEdit }) {
                   fontWeight: "bold",
                   marginBottom: "10px"
                 }}
-              >
-                View Details
-              </Link>
-            </div>
+                >
+                  View Details
+                </Link>
+              </div>
+            )}
             {/* OWNER ACTIONS */}
             {canManage && (
               <div className="book-actions">
