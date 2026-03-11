@@ -87,6 +87,7 @@ function BookCard({ book, currentUser, id, onDelete, onUpdateStatus, onEdit }) {
                 <input
                   className="input-field"
                   type="number"
+                  min="0"
                   value={editForm.price}
                   onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
                   placeholder="Price"
