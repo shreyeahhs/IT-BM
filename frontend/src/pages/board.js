@@ -316,6 +316,7 @@ export default function Boards({ user, onLogout }) {
                                     <input
                                         id="board-name"
                                         type="text"
+                                        maxLength={50}
                                         placeholder="Enter board name"
                                         value={newBoardName}
                                         onChange={e => setNewBoardName(e.target.value)}
@@ -325,6 +326,7 @@ export default function Boards({ user, onLogout }) {
                                     <input
                                         id="board-desc"
                                         type="text"
+                                        maxLength={200}
                                         placeholder="Enter board description"
                                         value={newBoardDesc}
                                         onChange={e => setNewBoardDesc(e.target.value)}

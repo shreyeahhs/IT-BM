@@ -40,6 +40,9 @@ const getDateLabel = (dateStr) => {
 export default function PostCard({ board, user, addPost }) {
   const [msg, setMsg] = useState("");
   const messagesEndRef = useRef(null);
+  const [showEmoji, setShowEmoji] = useState(false);
+  const emojis = ["😀", "😂", "🥰", "😎", "😭", "😡", "👍", "❤️", "🙏", "👀", "🔥", "✨"];
+  const isJoined = board?.is_member;
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -140,17 +143,55 @@ export default function PostCard({ board, user, addPost }) {
         <div ref={messagesEndRef} />
       </div>
 
+      {/* 1. 👇 新增：Emoji 悬浮面板 */}
+      {showEmoji && (
+        <div className="dc-emoji-picker">
+          {emojis.map((emoji, index) => (
+            <span 
+              key={index} 
+              className="dc-emoji-btn"
+              onClick={() => {
+                setMsg(prev => prev + emoji); 
+                setShowEmoji(false); 
+              }}
+            >
+              {emoji}
+            </span>
+          ))}
+        </div>
+      )}
+
       <div className="dc-composer">
-        <button className="dc-composer-plus" type="button" aria-label="Add">+</button>
+        <button 
+          className="dc-composer-plus" 
+          type="button" 
+          aria-label="Add"
+          disabled={!isJoined}
+          onClick={() => isJoined && setShowEmoji(!showEmoji)} 
+          style={{cursor: isJoined ? "pointer" : "not-allowed",}}
+        >
+          +
+        </button>
         <textarea
           className="dc-composer-input"
           value={msg}
+          disabled={!isJoined}
+          maxLength={500}
           onChange={(e) => setMsg(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={`Message #${board.name || "board"}`}
+          placeholder={isJoined ? `Message #${board?.name || "board"}` : "You must join to send messages."}
+          // placeholder={`Message #${board.name || "board"}`}
           rows={1}
+          style={{cursor: isJoined ? "pointer" : "not-allowed",}}
         />
-        <button className="dc-composer-send" type="button" onClick={postMessage} aria-label="Send">
+        <button 
+          className="dc-composer-send" 
+          type="button" 
+          onClick={postMessage} 
+          disabled={!isJoined} 
+          style={{ cursor: isJoined ? "pointer" : "not-allowed" }} 
+          aria-label="Send"
+        >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
             <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
           </svg>

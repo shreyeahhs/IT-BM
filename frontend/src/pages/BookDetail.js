@@ -103,8 +103,8 @@ const BookDetail = ({ user }) => {
                     {/* Price or status */}
                 </div>
 
-                {/* Review */}
-                <div style={{ marginTop: "30px" }}>
+                {/* Review (backend does not and may never support this function)*/}
+                {/* <div style={{ marginTop: "30px" }}>
                     <p style={{ fontWeight: "600", marginBottom: "8px", color: "#101828", fontSize: "1.6rem" }}>Post reviews</p>
                     <textarea
                     value={reviewText}
@@ -129,7 +129,7 @@ const BookDetail = ({ user }) => {
                     </Button>
                     </div>
 
-                </div>
+                </div> */}
                 </CardContent>
             </Card>
             </div>
