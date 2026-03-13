@@ -36,9 +36,13 @@ function Login({ setUser }) {
 
       navigate("/dashboard");
 
+    // } catch (err) {
+    //   setAlert({ type: "error", message: "Please enter email address and password" });
+    //   setTimeout(() => setAlert({ type: "", message: "" }), 3000);
+    // }
     } catch (err) {
-      setAlert({ type: "error", message: "Please enter email address and password" });
-
+      const errorMsg = err.response?.data?.detail || "Check email or password";
+      setAlert({ type: "error", message: errorMsg });
       setTimeout(() => setAlert({ type: "", message: "" }), 3000);
     }
   };

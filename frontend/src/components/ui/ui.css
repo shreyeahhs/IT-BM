@@ -124,7 +124,8 @@
 }
 
 .dashboard-list-card .search-bar {
-  width: calc(100% - 44px);
+  /* width: calc(100% - 44px); */
+  width: calc(100% - 72px);
   margin: 0 22px 10px;
 }
 
