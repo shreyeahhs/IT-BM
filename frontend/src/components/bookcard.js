@@ -1,12 +1,14 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import "../App.css";
+import Alert from "../components/alert";
 
 function BookCard({ book, currentUser, id, onDelete, onUpdateStatus, onEdit }) {
 
   const [showModal, setShowModal] = useState(false);
   const [rating, setRating] = useState(4);
   const [isEditing, setIsEditing] = useState(false);
+  const [alert, setAlert] = useState({ type: "", message: "" });
   const [editForm, setEditForm] = useState({
     title: book.title,
     author: book.author,
@@ -15,14 +17,27 @@ function BookCard({ book, currentUser, id, onDelete, onUpdateStatus, onEdit }) {
     status: book.status,
   });
 
+  const showAlert = (type, message) => {
+        setAlert({ type, message });
+        setTimeout(() => setAlert({ type: "", message: "" }), 3000); // auto-hide after 3s
+    };
+
   const isOwner = Number(id) === Number(book.owner) || currentUser === book.owner_username;
   const canManage = isOwner && (onDelete || onUpdateStatus || onEdit);
 
   const handleSaveEdit = async () => {
-    if (!onEdit) return;
+    try {
     await onEdit(book.id, editForm);
     setIsEditing(false);
     setShowModal(false);
+    showAlert("success", "Updated successfully!");
+  } catch (err) {
+    const backendError = err.response?.data?.price?.[0] || 
+                         err.response?.data?.error || 
+                         "Failed to update book.";
+    showAlert("error", backendError);
+    console.error("Save error:", err);
+  }
   };
 
   return (
@@ -87,9 +102,15 @@ function BookCard({ book, currentUser, id, onDelete, onUpdateStatus, onEdit }) {
                 <input
                   className="input-field"
                   type="number"
-                  min="0"
                   value={editForm.price}
-                  onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (parseFloat(val) < 0) { 
+                    showAlert("error", "Price cannot be negative!");
+                    } else if (val === '' || parseFloat(val) >= 0) {
+                      setEditForm({ ...editForm, price: val });
+                    }
+                  }}
                   placeholder="Price"
                 />
               </div>
