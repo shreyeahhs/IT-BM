@@ -57,11 +57,9 @@ class BoardViewSet(viewsets.ModelViewSet):
             # if not BoardMembership.objects.filter(user=request.user, board=board).exists():
             #     return Response({'error': 'Must be a member to post'}, status=status.HTTP_403_FORBIDDEN)
             
-            serializer = PostSerializer(data=request.data, context={'request': request})
+            serializer = PostSerializer(data=request.data, context={'request': request, 'board': board})
             if serializer.is_valid():
-                book_id = request.data.get('book_id')
-                rating = request.data.get('rating')
-                serializer.save(author=request.user, board=board, book_id=book_id, rating=rating)
+                serializer.save(author=request.user, board=board)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

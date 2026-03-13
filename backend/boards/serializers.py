@@ -29,36 +29,59 @@ class PostSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ['id', 'content', 'author', 'author_username', 'board', 'created_at']
+        fields = [
+            'id', 'content', 'author', 'author_username', 'board', 'created_at', 'book_id', 'rating'
+        ]
         read_only_fields = ['author', 'board']
+
+    def validate_content(self, value):
+        if not value or not value.strip():
+            raise serializers.ValidationError('Content cannot be empty.')
+        return value.strip()
 
     def validate(self, data):
         request = self.context.get('request')
-        
-        board = data.get('board')
-        if not board and self.instance:
+
+        board = self.context.get('board') or data.get('board')
+        if board is None and self.instance:
             board = self.instance.board
-            
-        book_id = self.initial_data.get('book_id') or data.get('book_id')
-        if not book_id and self.instance:
-            book_id = self.instance.book_id
 
-        if board and board.name == "__SYSTEM_REVIEWS__":
-            if not book_id:
-                raise serializers.ValidationError("Book review should connect with specific book ID.")
-        elif book_id:
-            raise serializers.ValidationError("Publish failed")
+        # Accept review fields from either validated_data or initial payload.
+        raw_book_id = data.get('book_id', self.initial_data.get('book_id'))
+        if raw_book_id in (None, '', 'null') and self.instance:
+            raw_book_id = self.instance.book_id
 
-        if book_id:
+        book_id = None
+        if raw_book_id not in (None, '', 'null'):
+            try:
+                book_id = int(raw_book_id)
+                if book_id <= 0:
+                    raise ValueError
+            except (TypeError, ValueError):
+                raise serializers.ValidationError('book_id must be a positive integer.')
 
-            rating = data.get('rating')
-            if rating is not None and (int(rating) < 1 or int(rating) > 5):
-                raise serializers.ValidationError("Rating must be between 1 and 5.")
+        if board and board.name == '__SYSTEM_REVIEWS__':
+            if book_id is None:
+                raise serializers.ValidationError('Book review should connect with specific book ID.')
+        elif book_id is not None:
+            raise serializers.ValidationError('book_id is only allowed in the system review board.')
 
-            if request and request.method == 'POST':
-                if Post.objects.filter(author=request.user, book_id=book_id).exists():
-                    raise serializers.ValidationError("You have already reviewed this book. Please edit it instead.")
-                    
+        raw_rating = data.get('rating', self.initial_data.get('rating'))
+        rating = None
+        if raw_rating not in (None, '', 'null'):
+            try:
+                rating = int(raw_rating)
+            except (TypeError, ValueError):
+                raise serializers.ValidationError('Rating must be an integer between 1 and 5.')
+            if rating < 1 or rating > 5:
+                raise serializers.ValidationError('Rating must be between 1 and 5.')
+
+        if request and request.method == 'POST' and book_id is not None:
+            if Post.objects.filter(author=request.user, book_id=book_id).exists():
+                raise serializers.ValidationError('You have already reviewed this book. Please edit it instead.')
+
+        data['book_id'] = book_id
+        data['rating'] = rating
         return data
 
     # def validate(self, data):
