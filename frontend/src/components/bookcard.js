@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import "../App.css";
 
 function BookCard({ book, currentUser, id, onDelete, onUpdateStatus, onEdit }) {
@@ -102,7 +103,26 @@ function BookCard({ book, currentUser, id, onDelete, onUpdateStatus, onEdit }) {
             <p className="date">
               {new Date(book.created_at).toLocaleString()}
             </p>
-
+            {/* Book Detail Entrance */}
+            <div style={{ marginTop: "20px" }}>
+              <Link 
+                to={`/book/${book.id}`} 
+                className="available-btn" 
+                style={{ 
+                  display: "block", 
+                  textAlign: "center", 
+                  textDecoration: "none", 
+                  background: "#111827",
+                  color: "white",
+                  padding: "10px",
+                  borderRadius: "8px",
+                  fontWeight: "bold",
+                  marginBottom: "10px"
+                }}
+              >
+                View Details
+              </Link>
+            </div>
             {/* OWNER ACTIONS */}
             {canManage && (
               <div className="book-actions">
