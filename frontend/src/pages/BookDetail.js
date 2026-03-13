@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import Navbar from "../components/navbar";
 import { api, getAuthConfig } from "../api";
 import { Button } from "../components/ui/button";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/card";
 import Alert from "../components/alert";
 
 
@@ -14,7 +14,6 @@ const BookDetail = ({ user }) => {
   const [bookReviews, setBookReviews] = useState([]);
   const [reviewText, setReviewText] = useState("");
   const [rating, setRating] = useState(4);
-  const [viewMode, setViewMode] = useState('restore');
   const [submitting, setSubmitting] = useState(false);
   const [editingReviewId, setEditingReviewId] = useState(null);
 
@@ -24,7 +23,7 @@ const BookDetail = ({ user }) => {
       setTimeout(() => setCustomAlert({ type: "", message: "" }), 3000);
   };
 
-  const loadReviews = async () => {
+  const loadReviews = useCallback(async () => {
     try {
       const boardRes = await api.get(`/boards/?name=__SYSTEM_REVIEWS__`, getAuthConfig());
       if (boardRes.data.length > 0) {
@@ -37,7 +36,7 @@ const BookDetail = ({ user }) => {
       console.error("Fetch reviews error:", err);
       return null;
     }
-  };
+  }, [id]);
 
     const handleEditClick = (rev) => {
         setReviewText(rev.content);
@@ -101,7 +100,7 @@ const BookDetail = ({ user }) => {
       }
     };
     fetchBookAndReviews();
-  }, [id]);
+  }, [id, loadReviews]);
 
   if (loading) return <div className="app-loading-state">Loading...</div>;
   if (!book) return <div className="app-loading-state" style={{ color: "red" }}>Can not find the book</div>;

@@ -42,6 +42,9 @@ function BookCard({ book, currentUser, id, onDelete, onUpdateStatus, onEdit }) {
 
   return (
     <>
+      {alert.message && (
+        <Alert type={alert.type} message={alert.message} onClose={() => setAlert({ type: "", message: "" })} />
+      )}
       {/* ===== BOOK PREVIEW CARD ===== */}
       <div className="book-card" onClick={() => setShowModal(true)}>
         <div className="image-wrapper">
