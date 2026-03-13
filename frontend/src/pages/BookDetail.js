@@ -166,7 +166,7 @@ const BookDetail = ({ user }) => {
                 <CardContent>
                 <div style={{ display: "flex", flexDirection: "column"}}>
                     <p style={{ margin: 6 }}><strong>Price:</strong> ${book.price}</p>
-                    <p style={{ margin: 6 }}><strong>Owner:</strong> {book.owner}</p>
+                    <p style={{ margin: 6 }}><strong>Owner:</strong> {book.owner_username}</p>
                     <p style={{ margin: 6 }}><strong>Condition:</strong> {book.condition}</p>
                     
                     <hr style={{ border: "0", borderTop: "1px solid #e7e8ec", margin: "10px 0" }} />
