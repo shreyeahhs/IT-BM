@@ -37,9 +37,52 @@ const getDateLabel = (dateStr) => {
   return d.toLocaleDateString([], { month: "long", day: "numeric", year: "numeric" });
 };
 
+const ExpandableMessage = ({ text, maxLength = 300 }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  if (!text) return null;
+
+  if (text.length <= maxLength) {
+    return (
+      <p className="dc-message-text" style={{ wordBreak: "break-word", margin: 0 }}>
+        {text}
+      </p>
+    );
+  }
+
+  return (
+    <div className="dc-expandable-message" style={{ display: "inline-block", width: "100%" }}>
+      <p className="dc-message-text" style={{ wordBreak: "break-word", display: "inline", margin: 0 }}>
+        {isExpanded ? text : `${text.slice(0, maxLength)}...`}
+      </p>
+      
+      {/* Tooltip */}
+      <span
+        className="dc-tooltip-trigger"
+        data-tooltip={isExpanded ? "Collapse to save space" : "Expand to read full message"}
+        onClick={() => setIsExpanded(!isExpanded)}
+        style={{
+          color: "#00a8fc",
+          cursor: "pointer",
+          marginLeft: "8px",
+          fontSize: "0.85em",
+          fontWeight: "600",
+          userSelect: "none"
+        }}
+      >
+        {isExpanded ? "Show Less" : "Read More"}
+      </span>
+    </div>
+  );
+};
+
 export default function PostCard({ board, user, addPost }) {
   const [msg, setMsg] = useState("");
   const messagesEndRef = useRef(null);
+  const [showEmoji, setShowEmoji] = useState(false);
+  const emojis = ["😀", "😂", "🥰", "😎", "😭", "😡", "👍", "❤️", "🙏", "👀", "🔥", "✨"];
+  const isJoined = board?.is_member;
+  const textareaRef = useRef(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -49,12 +92,34 @@ export default function PostCard({ board, user, addPost }) {
     if (!msg.trim()) return;
     await addPost(msg.trim());
     setMsg("");
+    if (textareaRef.current) textareaRef.current.style.height = "auto";
   };
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       postMessage();
+    }
+  };
+
+  // Input auto adjust height
+  const adjustHeight = () => { 
+    const textarea = textareaRef.current;
+    if (textarea) {
+
+      textarea.style.height = "auto";           // reset height
+      const maxHeight = window.innerHeight / 4; // max 1/4 of window height
+      const currentScrollHeight = textarea.scrollHeight;  // Current hieght
+
+      textarea.style.height = `${Math.min(textarea.scrollHeight, maxHeight)}px`;
+      
+      if (currentScrollHeight > maxHeight) {
+        textarea.style.height = `${maxHeight}px`;
+        textarea.style.overflowY = "auto"; 
+      } else {
+        textarea.style.height = `${currentScrollHeight}px`;
+        textarea.style.overflowY = "hidden";
+      }
     }
   };
 
@@ -106,7 +171,8 @@ export default function PostCard({ board, user, addPost }) {
                 <span className="dc-timestamp">{formatTime(m.created_at)}</span>
               </div>
             )}
-            <p className="dc-message-text">{m.content}</p>
+            {/* <p className="dc-message-text">{m.content}</p> */}
+            <ExpandableMessage text={m.content} maxLength={300}/>
           </div>
         </div>
       );
@@ -140,17 +206,82 @@ export default function PostCard({ board, user, addPost }) {
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="dc-composer">
-        <button className="dc-composer-plus" type="button" aria-label="Add">+</button>
+      {showEmoji && (
+        <div className="dc-emoji-picker">
+          {emojis.map((emoji, index) => (
+            <span 
+              key={index} 
+              className="dc-emoji-btn"
+              onClick={() => {
+                setMsg(prev => prev + emoji); 
+                setShowEmoji(false); 
+              }}
+            >
+              {emoji}
+            </span>
+          ))}
+        </div>
+      )}
+
+      <div 
+        className="dc-composer"
+        style={{
+          position: "relative",
+          opacity: isJoined ? 1 : 0.6,
+        }}
+      >
+        <button 
+          className="dc-composer-plus" 
+          type="button" 
+          aria-label="Add"
+          disabled={!isJoined}
+          onClick={() => isJoined && setShowEmoji(!showEmoji)} 
+          style={{cursor: isJoined ? "pointer" : "not-allowed",}}
+        >
+          +
+        </button>
         <textarea
+          ref={textareaRef}
           className="dc-composer-input"
           value={msg}
-          onChange={(e) => setMsg(e.target.value)}
+          disabled={!isJoined}
+          maxLength={999}
+          onChange={(e) => {
+            setMsg(e.target.value);
+            adjustHeight();
+          }}
           onKeyDown={handleKeyDown}
-          placeholder={`Message #${board.name || "board"}`}
+          placeholder={isJoined ? `Message #${board?.name || "board"}` : "You must join to send messages."}
+          // placeholder={`Message #${board.name || "board"}`}
           rows={1}
+          style={{cursor: isJoined ? "pointer" : "not-allowed",}}
         />
-        <button className="dc-composer-send" type="button" onClick={postMessage} aria-label="Send">
+
+        {msg.length >= 999 && (
+          <span className="dc-limit-warning">
+            Max 999 characters reached
+          </span>
+        )}
+
+        <span 
+          className="dc-char-counter"
+          style={{
+            // 980 red, 900 orange
+            color: msg.length >= 980 ? "#ed4245" : msg.length >= 900 ? "#faa61a" : "#949ba4",
+            fontWeight: msg.length >= 980 ? "bold" : "normal"
+          }}
+        >
+          {msg.length}/999
+        </span>
+
+        <button 
+          className="dc-composer-send" 
+          type="button" 
+          onClick={postMessage} 
+          disabled={!isJoined} 
+          style={{ cursor: isJoined ? "pointer" : "not-allowed" }} 
+          aria-label="Send"
+        >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
             <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
           </svg>

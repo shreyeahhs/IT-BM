@@ -288,15 +288,17 @@ export default function Boards({ user, onLogout }) {
                         </button>
                     </h3>
 
-                    {boards.map(b => (
-                        <div
-                            key={b.id}
-                            className={`sidebar-item ${currentBoard?.id === b.id ? "active" : ""}`}
-                            onClick={() => enterBoard(b)}
-                        >
-                            <span>{b.name}</span>
-                            <span className="member-badge">{b.member_count || 0}</span>
-                        </div>
+                    {boards
+                        .filter(b => b.name !== "__SYSTEM_REVIEWS__")
+                        .map(b => (
+                            <div
+                                key={b.id}
+                                className={`sidebar-item ${currentBoard?.id === b.id ? "active" : ""}`}
+                                onClick={() => enterBoard(b)}
+                            >
+                                <span>{b.name}</span>
+                                <span className="member-badge">{b.member_count || 0}</span>
+                            </div>
                     ))}
                     {showCreateBoard && (
                         <div className="modal-overlay" onClick={() => setShowCreateBoard(false)}>
@@ -316,6 +318,7 @@ export default function Boards({ user, onLogout }) {
                                     <input
                                         id="board-name"
                                         type="text"
+                                        maxLength={50}
                                         placeholder="Enter board name"
                                         value={newBoardName}
                                         onChange={e => setNewBoardName(e.target.value)}
@@ -325,6 +328,7 @@ export default function Boards({ user, onLogout }) {
                                     <input
                                         id="board-desc"
                                         type="text"
+                                        maxLength={200}
                                         placeholder="Enter board description"
                                         value={newBoardDesc}
                                         onChange={e => setNewBoardDesc(e.target.value)}

@@ -956,7 +956,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 18px;
+    padding: 10px 35px 10px 20px;
     border-radius: 8px;
     font-weight: 600;
     color: #fff;
@@ -965,6 +965,16 @@ body {
     transform: translateY(-20px);
     animation: slideIn 0.3s forwards;
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    position: relative;
+    min-width: 150px;
+    max-width: 90% ;
+}
+
+/* Text span */
+.custom-alert span {
+    flex: 1;
+    text-align: left;
+    padding-right: 10px;
 }
 
 /* Success alert */
@@ -979,6 +989,7 @@ body {
 
 /* Close button */
 .custom-alert .close-btn {
+    position: absolute;
     background: transparent;
     border: none;
     font-size: 18px;

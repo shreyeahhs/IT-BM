@@ -88,7 +88,19 @@ export default function CreateBook({ embedded = false, onCreated, onCancel }) {
           </div>
           <div className="input-row">
             <p className="input-label">Price</p>
-            <input className="input-field" placeholder="Enter price" type="number" value={price} onChange={e => setPrice(e.target.value)} />
+            <input 
+              className="input-field" 
+              placeholder="Enter price" 
+              type="number" 
+              min="0" 
+              value={price} 
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === '' || parseFloat(val) >= 0) {
+                  setPrice(e.target.value);
+                }
+              }}
+            />
           </div>
           <div className="input-row">
             <p className="input-label">Status <span className="required">*</span></p>

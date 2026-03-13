@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.validators import MinValueValidator
 
 class Book(models.Model):
     STATUS_CHOICES = [
@@ -11,7 +12,7 @@ class Book(models.Model):
     title = models.CharField(max_length=255)
     author = models.CharField(max_length=255)
     condition = models.CharField(max_length=100)
-    price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)])
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='available')
     cover = models.TextField(null=True, blank=True)
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='books')
