@@ -4,28 +4,103 @@ import Navbar from "../components/navbar";
 import { api, getAuthConfig } from "../api";
 import { Button } from "../components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../components/ui/card";
+import Alert from "../components/alert";
 
 
 const BookDetail = ({ user }) => {
   const { id } = useParams();
   const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [bookReviews, setBookReviews] = useState([]);
   const [reviewText, setReviewText] = useState("");
   const [rating, setRating] = useState(4);
   const [viewMode, setViewMode] = useState('restore');
+  const [submitting, setSubmitting] = useState(false);
+  const [editingReviewId, setEditingReviewId] = useState(null);
+
+  const [customAlert, setCustomAlert] = useState({ type: "", message: "" });
+  const showAlert = (type, message) => {
+      setCustomAlert({ type, message });
+      setTimeout(() => setCustomAlert({ type: "", message: "" }), 3000);
+  };
+
+  const loadReviews = async () => {
+    try {
+      const boardRes = await api.get(`/boards/?name=__SYSTEM_REVIEWS__`, getAuthConfig());
+      if (boardRes.data.length > 0) {
+        const reviewBoardId = boardRes.data[0].id;
+        const reviewsRes = await api.get(`/boards/${reviewBoardId}/posts/?book_id=${id}`, getAuthConfig());
+        setBookReviews(reviewsRes.data);
+        return reviewBoardId; 
+      }
+    } catch (err) {
+      console.error("Fetch reviews error:", err);
+      return null;
+    }
+  };
+
+    const handleEditClick = (rev) => {
+        setReviewText(rev.content);
+        setRating(rev.rating || 5);
+        setEditingReviewId(rev.id);
+        window.scrollTo({ top: 300, behavior: 'smooth' }); 
+    };
+
+    const handleCancelEdit = () => {
+        setReviewText("");
+        setRating(5);
+        setEditingReviewId(null);
+    };
+
+    const handlePostReview = async () => {
+        if (!reviewText.trim()) return showAlert("error", "Please enter some text.");
+        
+        setSubmitting(true);
+        try {
+            const boardRes = await api.get(`/boards/?name=__SYSTEM_REVIEWS__`, getAuthConfig());
+            const reviewBoardId = boardRes.data[0].id;
+            
+            const payload = {
+                content: reviewText,
+                book_id: id,
+                rating: rating 
+            };
+            
+            let res;
+            if (editingReviewId) {
+                res = await api.patch(`/posts/${editingReviewId}/`, payload, getAuthConfig());
+            } else {
+                res = await api.post(`/boards/${reviewBoardId}/posts/`, payload, getAuthConfig());
+            }
+            
+            if (res.status === 201 || res.status === 200) {
+                setReviewText("");
+                setRating(5);
+                setEditingReviewId(null);
+                loadReviews();
+                showAlert("success", editingReviewId ? "Review updated!" : "Review posted!");
+            }
+        } catch (err) {
+            const errorMsg = err.response?.data?.[0] || err.response?.data?.non_field_errors?.[0] || err.response?.data?.detail || "Error processing review";
+            showAlert("error", errorMsg);
+        } finally {
+            setSubmitting(false);
+        }
+    };
 
   useEffect(() => {
-    const fetchBook = async () => {
+    const fetchBookAndReviews = async () => {
       try {
         const response = await api.get(`/books/${id}/`, getAuthConfig());
         setBook(response.data);
+        await loadReviews();
       } catch (err) {
         console.error("Getting book details failed:", err);
       } finally {
         setLoading(false);
       }
     };
-    fetchBook();
+    fetchBookAndReviews();
   }, [id]);
 
   if (loading) return <div className="app-loading-state">Loading...</div>;
@@ -38,12 +113,21 @@ const BookDetail = ({ user }) => {
   return (
     <>
         <Navbar />
+        {customAlert.message && (
+            <Alert
+                type={customAlert.type}
+                message={customAlert.message}
+                onClose={() => setCustomAlert({ type: "", message: "" })}
+            />
+        )}
+
         <main className="app-page-shell"> 
         <div style={{ display: "flex", gap: "30px", marginTop: "20px" }}>
             <div style={{ flex: "0 0 300px" }}>
                 <div className="book-cover-restore">
                 <img 
-                    src={book.cover} 
+                    // src={book.cover} 
+                    src={coverSrc}
                     className="img-restore" 
                     alt={book.title} 
                 />
@@ -103,33 +187,84 @@ const BookDetail = ({ user }) => {
                     {/* Price or status */}
                 </div>
 
-                {/* Review (backend does not and may never support this function)*/}
-                {/* <div style={{ marginTop: "30px" }}>
-                    <p style={{ fontWeight: "600", marginBottom: "8px", color: "#101828", fontSize: "1.6rem" }}>Post reviews</p>
-                    <textarea
-                    value={reviewText}
-                    onChange={(e) => setReviewText(e.target.value)}
-                    placeholder="Reviews..."
-                    style={{ 
-                        width: "96%", 
-                        height: "120px", 
-                        padding: "16px", 
-                        borderRadius: "10px", 
-                        lineHeight: "1.5",
-                        border: "1px solid #d0d5dd",
-                        backgroundColor: "#f9fafb",
-                        resize: "vertical",
-                        fontFamily: "inherit",
-                    }}
-                    />
+                {/* Review*/}
+                <div style={{ marginTop: "30px" }}>
+                    <p style={{ fontWeight: "600", marginBottom: "8px", color: "#101828", fontSize: "1.6rem" }}>
+                        {editingReviewId ? "Edit your review" : "Post a review"}
+                    </p>
                     
-                    <div className="app-form-actions" style={{ justifyContent: "flex-end" }}>
-                    <Button variant="default" onClick={() => alert("Review feature backend pending!")}>
-                        Preview
-                    </Button>
-                    </div>
+                    <textarea
+                        value={reviewText}
+                        onChange={(e) => setReviewText(e.target.value)}
+                        placeholder="Reviews..."
+                        style={{ 
+                            width: "96%", 
+                            height: "120px", 
+                            padding: "16px", 
+                            borderRadius: "10px", 
+                            lineHeight: "1.5",
+                            border: "1px solid #d0d5dd",
+                            backgroundColor: "#f9fafb",
+                            resize: "vertical",
+                            fontFamily: "inherit",
+                        }}
+                    />
 
-                </div> */}
+                    <div className="app-form-actions" style={{ justifyContent: "flex-end", gap: "10px", marginTop: "10px" }}>
+                        {editingReviewId && (
+                            <Button variant="outline" onClick={handleCancelEdit} disabled={submitting}>
+                                Cancel
+                            </Button>
+                        )}
+                        <Button 
+                            variant="default" 
+                            onClick={handlePostReview} 
+                            disabled={submitting}
+                        >
+                            {submitting ? "Processing..." : (editingReviewId ? "Update Review" : "Submit Review")}
+                        </Button>
+                    </div>
+                </div>
+
+                <div style={{ marginTop: "40px", borderTop: "1px solid #eee", paddingTop: "20px" }}>
+                    <h3 style={{ fontFamily: "'Libre Caslon Text', serif" }}>Reviews ({bookReviews.length})</h3>
+                    
+                    {bookReviews.length === 0 ? (
+                        <p style={{ color: "#666" }}>No reviews yet. Be the first!</p>
+                    ) : (
+                        bookReviews.map((rev) => (
+                        <div key={rev.id} style={{ 
+                            padding: "15px", 
+                            borderBottom: "1px solid #f0f0f0",
+                            marginBottom: "10px"
+                        }}>
+                            {/* <div style={{ display: "flex", justifyContent: "space-between" }}>
+                            <strong>{rev.author_username}</strong>
+                            <span style={{ color: "#ffa500" }}>{"★".repeat(rev.rating)}</span>
+                            </div>
+                            <p style={{ marginTop: "8px", color: "#333" }}>{rev.content}</p>
+                            <small style={{ color: "#999" }}>{new Date(rev.created_at).toLocaleDateString()}</small> */}
+                            <div style={{ display: "flex", justifyContent: "space-between" }}>
+                                <div>
+                                    <strong style={{ marginRight: "10px" }}>{rev.author_username}</strong>
+                                    <span style={{ color: "#ffa500" }}>{"★".repeat(rev.rating || 0)}</span>
+                                </div>
+                                {localStorage.getItem('username') === rev.author_username && (
+                                    <button 
+                                        onClick={() => handleEditClick(rev)}
+                                        style={{ background: "none", border: "none", color: "#007bff", cursor: "pointer", fontSize: "0.9rem" }}
+                                    >
+                                        Edit
+                                    </button>
+                                )}
+                            </div>
+                            <p style={{ marginTop: "8px", color: "#333" }}>{rev.content}</p>
+                            <small style={{ color: "#999" }}>{new Date(rev.created_at).toLocaleDateString()}</small>
+                        </div>
+                        ))
+                    )}
+                </div>
+
                 </CardContent>
             </Card>
             </div>
