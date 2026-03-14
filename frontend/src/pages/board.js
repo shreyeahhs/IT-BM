@@ -118,36 +118,7 @@ export default function Boards({ user, onLogout }) {
             console.error(err);
         }
     };
-    //     if (res.status === 403) {
-    //         // user is NOT a member
-    //         setCurrentBoard({
-    //             ...board,
-    //             posts: [],
-    //             is_member: false
-    //         });
-    //         return;
-    //     }
 
-
-    //     const posts = await res.json();
-    //     // console.log(posts);
-    //     // 1. Update currentBoard
-    //     setCurrentBoard({
-    //         ...board,
-    //         posts: posts,
-    //         is_member: true
-    //     });
-
-    //     // 2. Update boards array to keep posts consistent
-    //     setBoards(prevBoards =>
-    //         prevBoards.map(b =>
-    //             b.id === board.id ? { ...b, posts: posts } : b
-    //         )
-    //     );
-    // } catch (err) {
-    //     console.error(err);
-    // }
-    // };
     const addPost = async (board, content) => {
         try {
             const res = await fetch(`${API_BASE_URL}/boards/${board.id}/posts/`, {
@@ -199,68 +170,6 @@ export default function Boards({ user, onLogout }) {
             console.error(err);
         }
     };
-
-    // useEffect(() => {
-    //     const saved = JSON.parse(localStorage.getItem("boards")) || [];
-    //     if (!saved || saved.length === 0) {
-    //         const defaultBoards = [
-    //             {
-    //                 name: "Fantasy Lovers",
-    //                 description: "Discuss fantasy novels, magical worlds, and epic adventures.",
-    //                 members: [],
-    //                 posts: [
-    //                     {
-    //                         author: "admin",Welcome to Fantasy Lovers board!
-    //                         content: "",
-    //                         created_at: new Date().toLocaleString()
-    //                     }
-    //                 ]
-    //             },
-    //             {
-    //                 name: "Programming Books",
-    //                 description: "Talk about coding, software development, and tech books.",
-    //                 members: [],
-    //                 posts: [
-    //                     {
-    //                         author: "admin",
-    //                         content: "Share your favorite programming book here!",
-    //                         created_at: new Date().toLocaleString()
-    //                     }
-    //                 ]
-    //             },
-    //             {
-    //                 name: "Second-Hand Market",
-    //                 description: "Buy, sell, or exchange second-hand books.",
-    //                 members: [],
-    //                 posts: [
-    //                     {
-    //                         author: "admin",
-    //                         content: "Post books you want to sell or borrow.",
-    //                         created_at: new Date().toLocaleString()
-    //                     }
-    //                 ]
-    //             },
-    //             {
-    //                 name: "Exam Preparation",
-    //                 description: "Discuss textbooks and revision materials for exams.",
-    //                 members: [],
-    //                 posts: [
-    //                     {
-    //                         author: "admin",
-    //                         content: "Share exam tips and recommended books!",
-    //                         created_at: new Date().toLocaleString()
-    //                     }
-    //                 ]
-    //             }
-    //         ];
-
-    //         setBoards(defaultBoards);
-    //         localStorage.setItem("boards", JSON.stringify(defaultBoards));
-    //     } else {
-    //         setBoards(saved);
-    //     }
-    // }, []);
-
 
     return (
         <>
