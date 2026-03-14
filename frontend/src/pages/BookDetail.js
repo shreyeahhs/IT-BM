@@ -283,7 +283,7 @@ const BookDetail = ({ user }) => {
                             <strong>{rev.author_username}</strong>
                             <span style={{ color: "#ffa500" }}>{"★".repeat(rev.rating)}</span>
                             </div>
-                            <p style={{ marginTop: "8px", color: "#333" }}>{rev.content}</p>
+                            <p style={{ marginTop: "8px",  color: "#333" }}>{rev.content}</p>
                             <small style={{ color: "#999" }}>{new Date(rev.created_at).toLocaleDateString()}</small> */}
                             <div style={{ display: "flex", justifyContent: "space-between" }}>
                                 <div>
