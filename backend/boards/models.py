@@ -23,5 +23,18 @@ class Post(models.Model):
     board = models.ForeignKey(DiscussionBoard, on_delete=models.CASCADE, related_name='posts')
     created_at = models.DateTimeField(auto_now_add=True)
 
+    book_id = models.IntegerField(null=True, blank=True) 
+    rating = models.IntegerField(null=True, blank=True)
+
+    class Meta:
+        # One user only have one post for a book
+        constraints = [
+            models.UniqueConstraint(
+                fields=['author', 'book_id'], 
+                name='unique_review_per_user',
+                condition=models.Q(book_id__isnull=False)
+            )
+        ]
+
     def __str__(self):
         return f"Post by {self.author.username} on {self.board.name}"

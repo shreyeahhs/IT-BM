@@ -288,15 +288,17 @@ export default function Boards({ user, onLogout }) {
                         </button>
                     </h3>
 
-                    {boards.map(b => (
-                        <div
-                            key={b.id}
-                            className={`sidebar-item ${currentBoard?.id === b.id ? "active" : ""}`}
-                            onClick={() => enterBoard(b)}
-                        >
-                            <span>{b.name}</span>
-                            <span className="member-badge">{b.member_count || 0}</span>
-                        </div>
+                    {boards
+                        .filter(b => b.name !== "__SYSTEM_REVIEWS__")
+                        .map(b => (
+                            <div
+                                key={b.id}
+                                className={`sidebar-item ${currentBoard?.id === b.id ? "active" : ""}`}
+                                onClick={() => enterBoard(b)}
+                            >
+                                <span>{b.name}</span>
+                                <span className="member-badge">{b.member_count || 0}</span>
+                            </div>
                     ))}
                     {showCreateBoard && (
                         <div className="modal-overlay" onClick={() => setShowCreateBoard(false)}>

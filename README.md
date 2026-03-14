@@ -1,6 +1,6 @@
-# Book Sharing and Discussion Platform
+# BookLoop
 
-Full-stack project for posting books, managing your own listings, and chatting in board-based communities.
+A full-stack book sharing and community platform — buy, sell, borrow, and discuss books with other readers.
 
 ## Tech Stack
 
@@ -11,48 +11,59 @@ Full-stack project for posting books, managing your own listings, and chatting i
 
 ## Current Status
 
-Both backend and frontend are implemented and connected.
+Both backend and frontend are fully implemented and connected.
 
 ## Backend Features
 
 - User registration and login APIs
 - Token-based authentication
 - Book CRUD with ownership checks
-- Book status updates (available/sold/borrowed)
-- Discussion boards with membership
-- Join/leave board actions
-- Board posts API with member-only posting
+- Book status updates (`available` / `sold` / `borrowed`)
+- Discussion boards with membership (join / leave)
+- Board posts API — member-only posting with validation
+- Book reviews and star ratings via a system review board (`__SYSTEM_REVIEWS__`)
+  - One review per user per book; edit supported
+  - `book_id` and `rating` (1–5) stored on `Post`
+- `generate_seed_images.py` — zero-dependency PNG cover generator
 
 ## Frontend Features
 
-- Login and register pages
+- Redesigned login and register pages with split-screen brand panel
 - Register supports first name + last name
-- Full-name greeting in navbar/dashboard/my books
-- Dashboard redesign with card-based layout
-- My Books page with:
-	- Create-book modal
-	- Edit listing inline
-	- Delete listing
+- Full-name greeting in navbar, dashboard, and My Books
+- Dashboard with card-based layout and quick-action shortcuts
+- My Books page:
+  - Create-book modal
+  - Inline edit listing
+  - Delete listing
 - Book cards show owner username (not numeric ID)
-- Base64 book cover upload and preview support
+- Base64 book cover upload and preview
+- Book detail page (`/book/:id`):
+  - Full book info (title, author, price, owner, condition, status)
+  - Post / edit star-rated reviews
+  - Community review list
 - Board page with Discord-inspired UI:
-	- Dark sidebar + channel-like board list
-	- Join/leave state synced with backend membership
-	- Grouped message rows with avatars and timestamps
-	- Empty-channel welcome message
-	- Message composer with Enter-to-send
+  - Dark sidebar + channel-like board list
+  - Join / leave state synced with backend membership
+  - Grouped message rows with avatars and timestamps
+  - Empty-channel welcome message
+  - Message composer with Enter-to-send and emoji picker
+  - Expandable long messages
 
 ## Data Model (High Level)
 
 - `User` (Django auth user)
 - `Book`
-	- `title`, `author`, `condition`, `price`, `status`, `cover`, `owner`, `created_at`
+  - `title`, `author`, `condition`, `price`, `status`, `cover`, `owner`, `created_at`
 - `DiscussionBoard`
-	- `name`, `description`, `members` (through `BoardMembership`)
+  - `name`, `description`, `members` (through `BoardMembership`)
+  - `__SYSTEM_REVIEWS__` — auto-created system board for book reviews
 - `BoardMembership`
-	- `user`, `board`, `joined_at`
+  - `user`, `board`, `joined_at`
 - `Post`
-	- `content`, `author`, `board`, `created_at`
+  - `content`, `author`, `board`, `created_at`
+  - `book_id` *(nullable)* — links review posts to a specific book
+  - `rating` *(nullable, 1–5)* — star rating for review posts
 
 ## Project Structure
 
@@ -61,80 +72,112 @@ backend/
 	manage.py
 	requirements.txt
 	db.sqlite3
+	generate_seed_images.py   ← generates seed cover PNGs (no extra deps)
 	bookshare/
 	books/
 	boards/
 	users/
 	seed_data/
-		covers/
+		covers/               ← cover_01.png … cover_10.png
 frontend/
+	src/
+		pages/
+			login.js
+			register.js
+			dashboard.js
+			booklist.js
+			mybook.js
+			createbook.js
+			board.js
+			BookDetail.js     ← book detail + reviews page
+			discussion.js
+		components/
+			navbar.js
+			bookcard.js
+			postcard.js
+			alert.js
 ```
 
 ## Local Setup (Windows)
 
 ### 1. Create Virtual Environment
 
+**PowerShell**
 ```powershell
 cd backend
-python -m venv ..\venv
+python -m venv ..\.venv
+```
+
+**CMD**
+```cmd
+cd backend
+python -m venv ..\.venv
 ```
 
 ### 2. Activate Virtual Environment
 
+**PowerShell**
 ```powershell
 cd ..
-.\venv\Scripts\Activate.ps1
+.\.venv\Scripts\Activate.ps1
 ```
 
-If you get this error:
-
-`running scripts is disabled on this system`
-
-Use one of the following:
+If you get `running scripts is disabled on this system`, run one of these first:
 
 Temporary (current shell only):
-
 ```powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-.\venv\Scripts\Activate.ps1
+.\.venv\Scripts\Activate.ps1
 ```
 
 Persistent for current user:
-
 ```powershell
 Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
-.\venv\Scripts\Activate.ps1
+.\.venv\Scripts\Activate.ps1
 ```
 
-If policy is managed by your organization, use alternatives:
-
+**CMD**
 ```cmd
-venv\Scripts\activate.bat
-```
-
-or run Python directly without activation:
-
-```powershell
-.\venv\Scripts\python.exe backend\manage.py runserver
+cd ..
+.venv\Scripts\activate.bat
 ```
 
 ### 3. Install Backend Dependencies
 
+**PowerShell**
 ```powershell
 cd backend
-..\venv\Scripts\python.exe -m pip install -r requirements.txt
+..\.venv\Scripts\python.exe -m pip install -r requirements.txt
+```
+
+**CMD**
+```cmd
+cd backend
+..\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
 ### 4. Run Migrations
 
+**PowerShell**
 ```powershell
-..\venv\Scripts\python.exe manage.py migrate
+..\.venv\Scripts\python.exe manage.py migrate
+```
+
+**CMD**
+```cmd
+..\.venv\Scripts\python.exe manage.py migrate
 ```
 
 ### 5. Start Backend
 
+**PowerShell**
 ```powershell
-..\venv\Scripts\python.exe manage.py runserver
+..\.venv\Scripts\python.exe manage.py runserver
+```
+
+**CMD**
+```cmd
+..\.venv\Scripts\python.exe manage.py runserver
 ```
 
 Backend runs at `http://127.0.0.1:8000/`.
@@ -143,7 +186,8 @@ Backend runs at `http://127.0.0.1:8000/`.
 
 Open a second terminal:
 
-```powershell
+**PowerShell / CMD**
+```cmd
 cd frontend
 npm install
 npm start
@@ -153,34 +197,67 @@ Frontend runs at `http://localhost:3000/`.
 
 ## Demo Seed Data
 
-This project includes seed scripts for demo users/books/boards/chats.
+This project includes seed scripts for demo users, books, boards, and posts.
 
-### Generate 10 Cover Images
+### Step 1 — Generate 10 Cover Images
 
+**PowerShell**
 ```powershell
 cd backend
-..\venv\Scripts\python.exe generate_seed_images.py
+..\.venv\Scripts\python.exe generate_seed_images.py
 ```
 
-### Seed Database
-
-```powershell
+**CMD**
+```cmd
 cd backend
-..\venv\Scripts\python.exe manage.py seed_db
+..\.venv\Scripts\python.exe generate_seed_images.py
 ```
 
-Seed command creates:
+Writes `cover_01.png` … `cover_10.png` into `backend/seed_data/covers/`.  
+Uses only Python standard library — no extra packages required.
+
+### Step 2 — Seed Database
+
+**PowerShell**
+```powershell
+..\.venv\Scripts\python.exe manage.py seed_db
+```
+
+**CMD**
+```cmd
+..\.venv\Scripts\python.exe manage.py seed_db
+```
+
+Creates:
 
 - 3 users
 - 10 books (with base64 covers)
 - 3 boards
-- sample posts in each board
+- Sample posts in each board
 
-Default test credentials:
+### Re-seed from scratch
 
-- `shreyas / testpass123`
-- `kunli / testpass123`
-- `shuao / testpass123`
+**PowerShell**
+```powershell
+Remove-Item db.sqlite3
+..\.venv\Scripts\python.exe manage.py migrate
+..\.venv\Scripts\python.exe manage.py seed_db
+```
+
+**CMD**
+```cmd
+del db.sqlite3
+..\.venv\Scripts\python.exe manage.py migrate
+..\.venv\Scripts\python.exe manage.py seed_db
+```
+
+### Default Test Credentials
+
+| Username | Password | Name |
+|---|---|---|
+| `shreyas` | `testpass123` | Shreyas Gowda |
+| `kunli` | `testpass123` | Kunli Shi |
+| `shuao` | `testpass123` | ShuAo Beh |
 
 ## API Base
 

@@ -8,3 +8,8 @@ class BookSerializer(serializers.ModelSerializer):
         model = Book
         fields = ['id', 'title', 'author', 'condition', 'price', 'status', 'cover', 'owner', 'owner_username', 'created_at']
         read_only_fields = ['owner']
+
+    def validate_price(self, value):
+        if value < 0:
+            raise serializers.ValidationError("Price can't be negative!")
+        return value

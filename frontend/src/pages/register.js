@@ -71,93 +71,142 @@ function Register() {
 
 
   return (
-    <div className="split-container">
-      {/* LEFT SIDE */}
-      <div className="left-panel">
-        <img src={logo} alt="Logo" />
-       </div>
+    <div className="auth-split-container">
 
-      {/* RIGHT SIDE */}
-      <div className="right-panel">
-        <div className="card auth-card-modern">
-          <h2>Register</h2>
+      {/* ── LEFT BRAND PANEL ── */}
+      <div className="auth-left-panel">
+        <div className="auth-brand-block">
+          <img src={logo} alt="BookLoop logo" className="auth-logo" />
+          <p className="auth-brand-tagline">
+            Buy, sell, borrow, and discuss books with your community.
+          </p>
+        </div>
 
-          <input
-            type="text"
-            placeholder="First Name"
-            className="input-field"
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-          />
+        <ul className="auth-feature-list">
+          <li>
+            <span className="auth-feature-icon">📚</span>
+            <div>
+              <strong>Marketplace</strong>
+              <p>List books for sale or trade with other readers nearby.</p>
+            </div>
+          </li>
+          <li>
+            <span className="auth-feature-icon">💬</span>
+            <div>
+              <strong>Discussion Boards</strong>
+              <p>Join topic boards, chat live, and share recommendations.</p>
+            </div>
+          </li>
+          <li>
+            <span className="auth-feature-icon">⭐</span>
+            <div>
+              <strong>Reviews</strong>
+              <p>Rate books and leave detailed reviews for the community.</p>
+            </div>
+          </li>
+        </ul>
 
-          <input
-            type="text"
-            placeholder="Last Name"
-            className="input-field"
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-          />
+        <p className="auth-left-footer">© 2026 BookLoop · All rights reserved</p>
+      </div>
 
-          <input
-            type="text"
-            placeholder="Username"
-            className="input-field"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-
-          {/* PASSWORD FIELD */}
-          <div className="password-wrapper">
-            <input
-              type={showPassword ? "text" : "password"}
-              placeholder="Password"
-              className="input-field"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <span
-              className="toggle-password"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? "Hide" : "Show"}
-            </span>
+      {/* ── RIGHT FORM PANEL ── */}
+      <div className="auth-right-panel">
+        <div className="auth-form-card">
+          <div className="auth-form-header">
+            <h2>Create your account</h2>
+            <p>Join BookLoop and start exploring</p>
           </div>
 
-          {/* CONFIRM PASSWORD FIELD */}
-          <div className="password-wrapper">
-            <input
-              type={showConfirmPassword ? "text" : "password"}
-              placeholder="Confirm Password"
-              className="input-field"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-            />
-            <span
-              className="toggle-password"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            >
-              {showConfirmPassword ? "Hide" : "Show"}
-            </span>
+          <div className="auth-name-row">
+            <div className="auth-field-group">
+              <label className="auth-label">First Name</label>
+              <input
+                type="text"
+                className="auth-input"
+                placeholder="First name"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+              />
+            </div>
+            <div className="auth-field-group">
+              <label className="auth-label">Last Name</label>
+              <input
+                type="text"
+                className="auth-input"
+                placeholder="Last name"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+              />
+            </div>
           </div>
 
-          <button className="btn btn-register auth-submit-btn" onClick={handleRegister}>
-            {isSubmitting ? "Registering..." : "Register"}
-          </button>
+          <div className="auth-field-group">
+            <label className="auth-label">Username</label>
+            <input
+              type="text"
+              className="auth-input"
+              placeholder="Choose a username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              autoComplete="username"
+            />
+          </div>
+
+          <div className="auth-field-group">
+            <label className="auth-label">Password</label>
+            <div className="auth-password-wrapper">
+              <input
+                type={showPassword ? "text" : "password"}
+                className="auth-input"
+                placeholder="Create a password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="new-password"
+              />
+              <button type="button" className="auth-toggle-pw" onClick={() => setShowPassword(!showPassword)}>
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
+          </div>
+
+          <div className="auth-field-group">
+            <label className="auth-label">Confirm Password</label>
+            <div className="auth-password-wrapper">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                className="auth-input"
+                placeholder="Repeat your password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                autoComplete="new-password"
+              />
+              <button type="button" className="auth-toggle-pw" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+                {showConfirmPassword ? "Hide" : "Show"}
+              </button>
+            </div>
+          </div>
 
           {alert.message && (
-            <div className={`custom-alert ${alert.type}`}>
-              <span>{alert.message}</span>
-              <button className="close-btn" onClick={() => setAlert({ type: "", message: "" })}>
-                &times;
-              </button>
+            <div className={`auth-alert ${alert.type}`}>
+              {alert.message}
+              <button onClick={() => setAlert({ type: "", message: "" })}>×</button>
             </div>
           )}
 
-          <p>
-            Already have an account? <Link to="/">Login here</Link>
+          <button
+            className="auth-submit-btn"
+            onClick={handleRegister}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Creating account…" : "Create account"}
+          </button>
+
+          <p className="auth-switch-text">
+            Already have an account? <Link to="/">Sign in</Link>
           </p>
         </div>
       </div>
+
     </div>
   );
 }
