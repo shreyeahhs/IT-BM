@@ -76,6 +76,83 @@ const ExpandableMessage = ({ text, maxLength = 300 }) => {
   );
 };
 
+const MessageItem = ({ m, isGrouped }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(m.content);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000); // Two seconds later, the display will return to "Copy".
+  };
+
+  return (
+    <div 
+      className={`dc-message ${isGrouped ? "dc-grouped" : ""}`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      style={{ position: "relative" }}
+    >
+      {isGrouped ? (
+        <div className="dc-avatar-spacer" />
+      ) : (
+        <div
+          className="dc-avatar"
+          style={{ background: getUserColor(m.author_username) }}
+        >
+          {getInitial(m.author_username)}
+        </div>
+      )}
+      <div className="dc-message-content">
+        {!isGrouped && (
+          <div className="dc-message-meta">
+            <span className="dc-author" style={{ color: getUserColor(m.author_username) }}>
+              {m.author_username}
+            </span>
+            <span className="dc-timestamp">{formatTime(m.created_at)}</span>
+          </div>
+        )}
+        <ExpandableMessage text={m.content} maxLength={300}/>
+      </div>
+
+      {/* Floating Copy Button (Visible on Hover) */}
+      {isHovered && (
+        <div 
+          onClick={handleCopy}
+          style={{
+            position: "absolute",
+            left: "65px",        // Align with the start of the text content
+            top: "-28px",        // Float above the text to prevent blocking
+            background: "#2b2d31",
+            border: "1px solid #1e1f22",
+            borderRadius: "6px",
+            padding: "6px 14px",
+            color: copied ? "#23a55a" : "#f2f3f5",
+            fontSize: "13px",
+            fontWeight: "500",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+            boxShadow: "0 4px 8px rgba(0,0,0,0.3)",
+            zIndex: 10
+          }}
+        >
+          {copied ? "✓ Copied" : (
+            <>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              Copy
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default function PostCard({ board, user, addPost }) {
   const [msg, setMsg] = useState("");
   const messagesEndRef = useRef(null);
@@ -151,31 +228,35 @@ export default function PostCard({ board, user, addPost }) {
       }
 
       items.push(
-        <div key={i} className={`dc-message ${isGrouped ? "dc-grouped" : ""}`}>
-          {isGrouped ? (
-            <div className="dc-avatar-spacer" />
-          ) : (
-            <div
-              className="dc-avatar"
-              style={{ background: getUserColor(m.author_username) }}
-            >
-              {getInitial(m.author_username)}
-            </div>
-          )}
-          <div className="dc-message-content">
-            {!isGrouped && (
-              <div className="dc-message-meta">
-                <span className="dc-author" style={{ color: getUserColor(m.author_username) }}>
-                  {m.author_username}
-                </span>
-                <span className="dc-timestamp">{formatTime(m.created_at)}</span>
-              </div>
-            )}
-            {/* <p className="dc-message-text">{m.content}</p> */}
-            <ExpandableMessage text={m.content} maxLength={300}/>
-          </div>
-        </div>
+        <MessageItem key={i} m={m} isGrouped={isGrouped} />
+        
+        // Merge conflict
+        // <div key={i} className={`dc-message ${isGrouped ? "dc-grouped" : ""}`}>
+        //   {isGrouped ? (
+        //     <div className="dc-avatar-spacer" />
+        //   ) : (
+        //     <div
+        //       className="dc-avatar"
+        //       style={{ background: getUserColor(m.author_username) }}
+        //     >
+        //       {getInitial(m.author_username)}
+        //     </div>
+        //   )}
+        //   <div className="dc-message-content">
+        //     {!isGrouped && (
+        //       <div className="dc-message-meta">
+        //         <span className="dc-author" style={{ color: getUserColor(m.author_username) }}>
+        //           {m.author_username}
+        //         </span>
+        //         <span className="dc-timestamp">{formatTime(m.created_at)}</span>
+        //       </div>
+        //     )}
+        //     {/* <p className="dc-message-text">{m.content}</p> */}
+        //     <ExpandableMessage text={m.content} maxLength={300}/>
+        //   </div>
+        // </div>
       );
+      // ==========================================
 
       lastDateStr = dateStr;
       lastAuthor = m.author_username;

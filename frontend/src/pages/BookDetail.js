@@ -13,7 +13,7 @@ const BookDetail = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [bookReviews, setBookReviews] = useState([]);
   const [reviewText, setReviewText] = useState("");
-  const [rating, setRating] = useState(4);
+  const [rating, setRating] = useState(5);
   const [submitting, setSubmitting] = useState(false);
   const [editingReviewId, setEditingReviewId] = useState(null);
 
@@ -108,7 +108,10 @@ const BookDetail = ({ user }) => {
   const coverSrc = book.cover 
     ? (book.cover.startsWith("data:image") ? book.cover : `data:image/jpeg;base64,${book.cover}`) 
     : "https://via.placeholder.com/300x400?text=No+Cover";
-
+  
+  const rawAverage = bookReviews.length > 0 ? bookReviews.reduce((sum, rev) => sum + (rev.rating || 0), 0) / bookReviews.length : 0;
+  const averageRating = Math.round(rawAverage);
+  
   return (
     <>
         <Navbar />
@@ -137,29 +140,26 @@ const BookDetail = ({ user }) => {
             <div style={{ flex: "1" }}>
             <Card className="app-form-card">
                 <CardHeader style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <div>
-                    <CardTitle style={{ fontSize: "3rem", fontFamily: "'Libre Caslon Text', serif", letterSpacing: "-0.02em"}}>{book.title}</CardTitle>
-                    <p style={{ color: "#323741", marginTop: "4px", fontSize: "1.3rem", fontFamily: "'Libre Caslon Text', serif"}}>{book.author}</p>
-                </div>
-                <div 
-                    className="rating" 
-                    style={{ 
-                        transform: "scale(1.2)",
-                        transformOrigin: "left center",
-                        pointerEvents: "none"
-                    }}
-                >
-                    {[1, 2, 3, 4, 5].map((star) => (
-                    <span 
-                        key={star} 
-                        className={star <= rating ? "star filled" : "star"} 
-                        onClick={() => setRating(star)}
-                        style={{ cursor: "pointer" }}
-                    >
-                        ★
-                    </span>
-                    ))}
-                </div>
+                    <div style={{ display: "flex", flexDirection: "column" }}>
+                        <CardTitle style={{ fontSize: "3rem", fontFamily: "'Libre Caslon Text', serif", letterSpacing: "-0.02em"}}>
+                            {book.title}
+                        </CardTitle>
+                        <p style={{ color: "#323741", marginTop: "4px", fontSize: "1.3rem", fontFamily: "'Libre Caslon Text', serif"}}>
+                            {book.author}
+                        </p>
+
+                        {/* Average rating stars (moved to the left, text removed) */}
+                        <div style={{ display: "flex", gap: "2px", fontSize: "1.5rem", pointerEvents: "none", marginTop: "8px" }}>
+                            {[1, 2, 3, 4, 5].map((star) => (
+                                <span 
+                                    key={star} 
+                                    style={{ color: star <= averageRating ? "#ffa500" : "#e4e5e9" }} 
+                                >
+                                    ★
+                                </span>
+                            ))}
+                        </div>
+                    </div>
                 </CardHeader>
 
                 <CardContent>
@@ -188,26 +188,68 @@ const BookDetail = ({ user }) => {
 
                 {/* Review*/}
                 <div style={{ marginTop: "30px" }}>
-                    <p style={{ fontWeight: "600", marginBottom: "8px", color: "#101828", fontSize: "1.6rem" }}>
-                        {editingReviewId ? "Edit your review" : "Post a review"}
-                    </p>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", width: "100%" }}>
+                        <p style={{ fontWeight: "600", color: "#101828", fontSize: "1.6rem", margin: 0 }}>
+                            {editingReviewId ? "Edit your review" : "Post a review"}
+                        </p>
+                        
+                        {/* Interactive stars for user rating */}
+                        <div style={{ display: "flex", gap: "4px", fontSize: "1.6rem" }}>
+                            {[1, 2, 3, 4, 5].map((star) => (
+                                <span 
+                                    key={star} 
+                                    onClick={() => setRating(star)}
+                                    style={{ 
+                                        cursor: "pointer", 
+                                        color: star <= rating ? "#ffa500" : "#e4e5e9",
+                                        transition: "color 0.2s"
+                                    }}
+                                >
+                                    ★
+                                </span>
+                            ))}
+                        </div>
+                    </div>
                     
-                    <textarea
-                        value={reviewText}
-                        onChange={(e) => setReviewText(e.target.value)}
-                        placeholder="Reviews..."
-                        style={{ 
-                            width: "96%", 
-                            height: "120px", 
-                            padding: "16px", 
-                            borderRadius: "10px", 
-                            lineHeight: "1.5",
-                            border: "1px solid #d0d5dd",
-                            backgroundColor: "#f9fafb",
-                            resize: "vertical",
-                            fontFamily: "inherit",
-                        }}
-                    />
+                    
+                    <div style={{ position: "relative", width: "100%" }}>
+                        <textarea
+                            value={reviewText}
+                            onChange={(e) => setReviewText(e.target.value)}
+                            placeholder="Reviews..."
+                            maxLength={500} // Limit maximum characters
+                            style={{ 
+                                width: "100%", 
+                                height: "120px", 
+                                padding: "16px",
+                                paddingBottom: "35px", // Reserve space for the counter
+                                borderRadius: "10px", 
+                                lineHeight: "1.5",
+                                border: "1px solid #d0d5dd",
+                                backgroundColor: "#f9fafb",
+                                resize: "none",        // Disable drag-to-resize handle
+                                fontFamily: "inherit",
+                                boxSizing: "border-box" // Ensure padding is included in width
+                            }}
+                        />
+                        
+                        {/* Live character counter positioned at bottom right */}
+                        <span 
+                            style={{
+                                position: "absolute",
+                                bottom: "12px",
+                                right: "16px",
+                                fontSize: "12px",
+                                fontWeight: "500",
+                                // Turn red when approaching the limit
+                                color: reviewText.length >= 480 ? "#ed4245" : "#98a2b3", 
+                                pointerEvents: "none" 
+                            }}
+                        >
+                            {reviewText.length}/500
+                        </span>
+                    </div>
+                    
 
                     <div className="app-form-actions" style={{ justifyContent: "flex-end", gap: "10px", marginTop: "10px" }}>
                         {editingReviewId && (
@@ -246,7 +288,13 @@ const BookDetail = ({ user }) => {
                             <div style={{ display: "flex", justifyContent: "space-between" }}>
                                 <div>
                                     <strong style={{ marginRight: "10px" }}>{rev.author_username}</strong>
-                                    <span style={{ color: "#ffa500" }}>{"★".repeat(rev.rating || 0)}</span>
+                                    <div style={{ display: "inline-flex", gap: "2px", fontSize: "1.1rem" }}>
+                                        {[1, 2, 3, 4, 5].map(star => (
+                                            <span key={star} style={{ color: star <= (rev.rating || 0) ? "#ffa500" : "#e4e5e9" }}>
+                                                ★
+                                            </span>
+                                        ))}
+                                    </div>
                                 </div>
                                 {localStorage.getItem('username') === rev.author_username && (
                                     <button 

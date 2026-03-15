@@ -6,7 +6,7 @@ import Alert from "../components/alert";
 function BookCard({ book, currentUser, id, onDelete, onUpdateStatus, onEdit }) {
 
   const [showModal, setShowModal] = useState(false);
-  const [rating, setRating] = useState(4);
+  const displayRating = book.average_rating || 0;
   const [isEditing, setIsEditing] = useState(false);
   const [alert, setAlert] = useState({ type: "", message: "" });
   const [editForm, setEditForm] = useState({
@@ -73,14 +73,28 @@ function BookCard({ book, currentUser, id, onDelete, onUpdateStatus, onEdit }) {
               </span>
             </div>
 
-            {/* ⭐ Rating */}
-            <div className="rating">
+            
+            {/* ⭐ Rating (Read-only for preview) */}
+            <div 
+              className="rating" 
+              style={{ 
+                display: "flex", 
+                gap: "2px", 
+                pointerEvents: "none", 
+                cursor: "default"      
+              }}
+            >
               {[1, 2, 3, 4, 5].map((star) => (
-                <span key={star} className={star <= rating ? "star filled" : "star"} onClick={() => setRating(star)}>
+                <span 
+                  key={star} 
+                  className={star <= displayRating ? "star filled" : "star"} 
+                  style={{ color: star <= displayRating ? "#ffa500" : "#e4e5e9" }} 
+                >
                   ★
                 </span>
               ))}
             </div>
+            
 
             {isEditing ? (
               <div>
@@ -105,6 +119,7 @@ function BookCard({ book, currentUser, id, onDelete, onUpdateStatus, onEdit }) {
                 <input
                   className="input-field"
                   type="number"
+                  min="0"
                   value={editForm.price}
                   onChange={(e) => {
                     const val = e.target.value;
