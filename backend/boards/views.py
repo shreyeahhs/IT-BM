@@ -1,8 +1,16 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import DiscussionBoard, BoardMembership, Post
-from .serializers import DiscussionBoardSerializer, BoardMembershipSerializer, PostSerializer
+from django.db.models import Q
+from books.models import Book
+from .models import DiscussionBoard, BoardMembership, Post, TradeChatRoom, TradeChatMessage
+from .serializers import (
+    DiscussionBoardSerializer,
+    BoardMembershipSerializer,
+    PostSerializer,
+    TradeChatRoomSerializer,
+    TradeChatMessageSerializer,
+)
 from .permissions import IsBoardMember
 
 class BoardViewSet(viewsets.ModelViewSet):
@@ -73,3 +81,58 @@ class PostViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Post.objects.all()
+
+
+class TradeChatRoomViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = TradeChatRoomSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return TradeChatRoom.objects.filter(
+            Q(buyer=self.request.user) | Q(seller=self.request.user)
+        ).select_related('book', 'buyer', 'seller').order_by('-updated_at')
+
+    @action(detail=False, methods=['post'], url_path='start')
+    def start(self, request):
+        book_id = request.data.get('book_id')
+        intent = request.data.get('intent', 'buy')
+
+        if intent not in {'buy', 'borrow'}:
+            return Response({'error': 'intent must be buy or borrow'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not book_id:
+            return Response({'error': 'book_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            book = Book.objects.get(pk=book_id)
+        except Book.DoesNotExist:
+            return Response({'error': 'Book not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        if book.owner_id == request.user.id:
+            return Response({'error': 'You cannot start a chat on your own listing'}, status=status.HTTP_400_BAD_REQUEST)
+
+        room, created = TradeChatRoom.objects.get_or_create(
+            book=book,
+            buyer=request.user,
+            seller=book.owner,
+            defaults={'initial_intent': intent},
+        )
+
+        serializer = self.get_serializer(room)
+        return Response(serializer.data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+
+    @action(detail=True, methods=['get', 'post'], url_path='messages')
+    def messages(self, request, pk=None):
+        room = self.get_object()
+
+        if request.method == 'GET':
+            messages = room.messages.select_related('sender').all()
+            serializer = TradeChatMessageSerializer(messages, many=True)
+            return Response(serializer.data)
+
+        serializer = TradeChatMessageSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(room=room, sender=request.user)
+            room.save(update_fields=['updated_at'])
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -1,9 +1,12 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "../App.css";
 import Alert from "../components/alert";
+import { api, getAuthConfig } from "../api";
+import { Button } from "../components/ui/button";
 
 function BookCard({ book, currentUser, id, onDelete, onUpdateStatus, onEdit }) {
+  const navigate = useNavigate();
 
   const [showModal, setShowModal] = useState(false);
   const displayRating = book.average_rating || 0;
@@ -22,7 +25,9 @@ function BookCard({ book, currentUser, id, onDelete, onUpdateStatus, onEdit }) {
         setTimeout(() => setAlert({ type: "", message: "" }), 3000); // auto-hide after 3s
     };
 
-  const isOwner = Number(id) === Number(book.owner) || currentUser === book.owner_username;
+  const viewerId = id || localStorage.getItem("id");
+  const viewerUsername = currentUser || localStorage.getItem("username");
+  const isOwner = Number(viewerId) === Number(book.owner) || viewerUsername === book.owner_username;
   const canManage = isOwner && (onDelete || onUpdateStatus || onEdit);
 
   const handleSaveEdit = async () => {
@@ -40,6 +45,27 @@ function BookCard({ book, currentUser, id, onDelete, onUpdateStatus, onEdit }) {
   }
   };
 
+  const handleStartTradeChat = async (intent) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        showAlert("error", "Please login to start a chat.");
+        return;
+      }
+
+      const res = await api.post(
+        "/trade-chats/start/",
+        { book_id: book.id, intent },
+        getAuthConfig()
+      );
+      setShowModal(false);
+      navigate(`/trade-chat/${res.data.id}`);
+    } catch (err) {
+      const errorMsg = err.response?.data?.error || "Could not start chat room.";
+      showAlert("error", errorMsg);
+    }
+  };
+
   return (
     <>
       {alert.message && (
@@ -54,6 +80,31 @@ function BookCard({ book, currentUser, id, onDelete, onUpdateStatus, onEdit }) {
         <div className="book-preview">
           <h3>{book.title}</h3>
           <p>{book.author}</p>
+
+          {!isOwner && (
+            <div className="book-actions" style={{ marginTop: "8px" }}>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleStartTradeChat("buy");
+                }}
+              >
+                Buy
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleStartTradeChat("borrow");
+                }}
+              >
+                Borrow
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -189,21 +240,19 @@ function BookCard({ book, currentUser, id, onDelete, onUpdateStatus, onEdit }) {
                 )}
 
                 {onEdit && !isEditing && (
-                  <button className="available-btn" onClick={() => setIsEditing(true)}>
+                  <Button variant="secondary" size="sm" onClick={() => setIsEditing(true)}>
                     Edit
-                  </button>
+                  </Button>
                 )}
 
                 {onEdit && isEditing && (
                   <>
-                    <button className="sold-btn" onClick={handleSaveEdit}>Save</button>
-                    <button className="borrow-btn" onClick={() => setIsEditing(false)}>Cancel</button>
+                    <Button size="sm" onClick={handleSaveEdit}>Save</Button>
+                    <Button variant="secondary" size="sm" onClick={() => setIsEditing(false)}>Cancel</Button>
                   </>
                 )}
 
-                {onDelete && <button className="delete-btn" onClick={() => onDelete(book.id)}>
-                  Delete
-                </button>}
+                {onDelete && <Button variant="ghost" size="sm" onClick={() => onDelete(book.id)}>Delete</Button>}
               </div>
 
             )}

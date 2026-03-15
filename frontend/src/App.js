@@ -8,6 +8,8 @@ import Dashboard from "./pages/dashboard";
 import Boards from "./pages/board";
 import MyBooks from "./pages/mybook";
 import BookDetail from "./pages/BookDetail";
+import TradeChat from "./pages/tradechat";
+import TradeChats from "./pages/tradechats";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -24,7 +26,9 @@ function App() {
         <Route path="/dashboard" element={<Dashboard user={user} />} />
         <Route path="/board" element={<Boards user={user} />} />
         <Route path="/mybook" element={<MyBooks />} />
+        <Route path="/chats" element={<TradeChats user={user} />} />
         <Route path="/book/:id" element={<BookDetail user={user} />} />
+        <Route path="/trade-chat/:roomId" element={<TradeChat user={user} />} />
 
       </Routes>
     </Router>

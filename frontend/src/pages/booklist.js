@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from "react";
 import BookCard from "../components/bookcard";
 import { api, getAuthConfig } from "../api";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../components/ui/card";
+
 function BookList({ embedded = false }) {
   const [books, setBooks] = useState([]);
   const [search, setSearch] = useState("");
+  const currentUserId = Number(localStorage.getItem("id"));
+  const currentUsername = localStorage.getItem("username") || "";
 
   const fetchBooks = async () => {
     try {
@@ -20,6 +24,13 @@ function BookList({ embedded = false }) {
       book.author.toLowerCase().includes(search.toLowerCase())
   );
 
+  const ownBooks = filteredBooks.filter(
+    (book) => Number(book.owner) === currentUserId || book.owner_username === currentUsername
+  );
+  const otherBooks = filteredBooks.filter(
+    (book) => !(Number(book.owner) === currentUserId || book.owner_username === currentUsername)
+  );
+
   useEffect(() => {
     fetchBooks();
   }, []);
@@ -33,11 +44,36 @@ function BookList({ embedded = false }) {
         placeholder="Search by title or author..."
         onChange={(e) => setSearch(e.target.value)}
       />
-      <div className="book-container">
-        {filteredBooks.map((book) => (
-          <BookCard key={book.id} book={book} />
-        ))}
-      </div>
+
+      {ownBooks.length > 0 && (
+        <Card className="listing-section listing-card-shell">
+          <CardHeader>
+            <CardTitle>My Listings</CardTitle>
+            <CardDescription>Books posted by you.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="book-container">
+              {ownBooks.map((book) => (
+                <BookCard key={book.id} book={book} />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <Card className="listing-section listing-card-shell">
+        <CardHeader>
+          <CardTitle>Marketplace Listings</CardTitle>
+          <CardDescription>Browse books from other users.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="book-container">
+            {otherBooks.map((book) => (
+              <BookCard key={book.id} book={book} />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

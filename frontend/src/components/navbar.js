@@ -34,6 +34,7 @@ export default function Navbar({ user, onLogout }) {
       <div className="nav-links">
         <Link to="/dashboard" className="nav-link-item">Home</Link>
         <Link to="/mybook" className="nav-link-item">My Books</Link>
+        <Link to="/chats" className="nav-link-item">Chats</Link>
         <Link to="/board" className="nav-link-item">Boards</Link>
         <button type="button" className="btn-logout" onClick={handleLogout}>
           Sign out

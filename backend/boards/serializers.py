@@ -1,5 +1,5 @@
 from rest_framework import serializers, viewsets, permissions
-from .models import DiscussionBoard, BoardMembership, Post
+from .models import DiscussionBoard, BoardMembership, Post, TradeChatRoom, TradeChatMessage
 
 class DiscussionBoardSerializer(serializers.ModelSerializer):
     member_count = serializers.IntegerField(source='members.count', read_only=True)
@@ -107,3 +107,39 @@ class PostSerializer(serializers.ModelSerializer):
     #             raise serializers.ValidationError("Rating must be between 1 and 5.")
                 
     #     return data
+
+
+class TradeChatRoomSerializer(serializers.ModelSerializer):
+    book_title = serializers.ReadOnlyField(source='book.title')
+    buyer_username = serializers.ReadOnlyField(source='buyer.username')
+    seller_username = serializers.ReadOnlyField(source='seller.username')
+
+    class Meta:
+        model = TradeChatRoom
+        fields = [
+            'id',
+            'book',
+            'book_title',
+            'buyer',
+            'buyer_username',
+            'seller',
+            'seller_username',
+            'initial_intent',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['buyer', 'seller', 'created_at', 'updated_at']
+
+
+class TradeChatMessageSerializer(serializers.ModelSerializer):
+    sender_username = serializers.ReadOnlyField(source='sender.username')
+
+    class Meta:
+        model = TradeChatMessage
+        fields = ['id', 'room', 'sender', 'sender_username', 'content', 'created_at']
+        read_only_fields = ['room', 'sender', 'created_at']
+
+    def validate_content(self, value):
+        if not value or not value.strip():
+            raise serializers.ValidationError('Message cannot be empty.')
+        return value.strip()
