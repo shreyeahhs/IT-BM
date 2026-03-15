@@ -106,3 +106,5 @@ SPECTACULAR_SETTINGS = {
 }
 
 CORS_ALLOW_ALL_ORIGINS = True
+
+TEST_RUNNER = 'bookshare.test_runner.SymbolDiscoverRunner'
