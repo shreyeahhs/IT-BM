@@ -20,78 +20,28 @@ export default function MyBooks() {
     const lastName = localStorage.getItem("last_name") || "";
     const displayName = `${firstName} ${lastName}`.trim() || username;
 
-    // useEffect(() => {
-    //     const sampleBooks = [
-    //         {
-    //             id: 1,
-    //             title: "React Guide",
-    //             author: "John Doe",
-    //             condition: "New",
-    //             price: 29.99,
-    //             status: "available",
-    //             owner: "admin1@gmail.com",
-    //             created_at: "2026-03-05T10:30:00",
-    //             cover: reactCover
-    //         },
-    //         {
-    //             id: 2,
-    //             title: "Django for Beginners",
-    //             author: "William Vincent",
-    //             condition: "Good",
-    //             price: 18.50,
-    //             status: "sold",
-    //             owner: "shu_ao",
-    //             created_at: "2026-03-04T14:20:00",
-    //             cover: djangoCover
-    //         },
-    //         {
-    //             id: 3,
-    //             title: "Clean Code",
-    //             author: "Robert C. Martin",
-    //             condition: "Used",
-    //             price: 12.00,
-    //             status: "borrowed",
-    //             owner: "admin1@gmail.com",
-    //             created_at: "2026-03-03T18:10:00",
-    //             cover: "https://via.placeholder.com/120x160"
-    //         },
-    //         {
-    //             id: 4,
-    //             title: "Python Crash Course",
-    //             author: "Eric Matthes",
-    //             condition: "Like New",
-    //             price: 22.99,
-    //             status: "available",
-    //             owner: "shu_ao",
-    //             created_at: "2026-03-02T09:15:00",
-    //             cover: "https://via.placeholder.com/120x160"
-    //         }
-    //     ];
 
-    //     setBooks(sampleBooks);
-    //     setLoading(false);
-    // }, []);
-            const fetchMyBooks = useCallback(async () => {
+    const fetchMyBooks = useCallback(async () => {
         if (!token) {
-          setAlert({ type: "error", message: "You must be logged in to view your books." });
-          setLoading(false);
-          return;
+            setAlert({ type: "error", message: "You must be logged in to view your books." });
+            setLoading(false);
+            return;
         }
 
         try {
-                    const response = await api.get("/books/my-books/", getAuthConfig());
-          setBooks(response.data);
-          setLoading(false);
+            const response = await api.get("/books/my-books/", getAuthConfig());
+            setBooks(response.data);
+            setLoading(false);
         } catch (error) {
-          console.error(error);
-          setAlert({ type: "error", message: "Failed to fetch your books." });
-          setLoading(false);
+            console.error(error);
+            setAlert({ type: "error", message: "Failed to fetch your books." });
+            setLoading(false);
         }
-            }, [token, setAlert]);
+    }, [token, setAlert]);
 
-            useEffect(() => {
-                fetchMyBooks();
-            }, [fetchMyBooks]);
+    useEffect(() => {
+        fetchMyBooks();
+    }, [fetchMyBooks]);
 
     const handleDeleteBook = async (id) => {
         try {

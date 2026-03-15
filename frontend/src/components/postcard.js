@@ -229,6 +229,32 @@ export default function PostCard({ board, user, addPost }) {
 
       items.push(
         <MessageItem key={i} m={m} isGrouped={isGrouped} />
+        
+        // Merge conflict
+        // <div key={i} className={`dc-message ${isGrouped ? "dc-grouped" : ""}`}>
+        //   {isGrouped ? (
+        //     <div className="dc-avatar-spacer" />
+        //   ) : (
+        //     <div
+        //       className="dc-avatar"
+        //       style={{ background: getUserColor(m.author_username) }}
+        //     >
+        //       {getInitial(m.author_username)}
+        //     </div>
+        //   )}
+        //   <div className="dc-message-content">
+        //     {!isGrouped && (
+        //       <div className="dc-message-meta">
+        //         <span className="dc-author" style={{ color: getUserColor(m.author_username) }}>
+        //           {m.author_username}
+        //         </span>
+        //         <span className="dc-timestamp">{formatTime(m.created_at)}</span>
+        //       </div>
+        //     )}
+        //     {/* <p className="dc-message-text">{m.content}</p> */}
+        //     <ExpandableMessage text={m.content} maxLength={300}/>
+        //   </div>
+        // </div>
       );
       // ==========================================
 
