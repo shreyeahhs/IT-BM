@@ -6,7 +6,7 @@ import Alert from "../components/alert";
 function BookCard({ book, currentUser, id, onDelete, onUpdateStatus, onEdit }) {
 
   const [showModal, setShowModal] = useState(false);
-  const [rating, setRating] = useState(4);
+  const displayRating = book.average_rating || 0;
   const [isEditing, setIsEditing] = useState(false);
   const [alert, setAlert] = useState({ type: "", message: "" });
   const [editForm, setEditForm] = useState({
@@ -87,13 +87,14 @@ function BookCard({ book, currentUser, id, onDelete, onUpdateStatus, onEdit }) {
               {[1, 2, 3, 4, 5].map((star) => (
                 <span 
                   key={star} 
-                  className={star <= rating ? "star filled" : "star"} 
-                  style={{ color: star <= rating ? "#ffa500" : "#e4e5e9" }} 
+                  className={star <= displayRating ? "star filled" : "star"} 
+                  style={{ color: star <= displayRating ? "#ffa500" : "#e4e5e9" }} 
                 >
                   ★
                 </span>
               ))}
             </div>
+            
 
             {isEditing ? (
               <div>
