@@ -4,6 +4,7 @@ services:
     env: python
     rootDir: backend
     plan: free
+    healthCheckPath: /api/health/
     buildCommand: pip install -r requirements.txt
     startCommand: python manage.py migrate && gunicorn bookshare.wsgi:application --bind 0.0.0.0:$PORT
     envVars:
@@ -25,6 +26,10 @@ staticSites:
     rootDir: frontend
     buildCommand: npm ci && npm run build
     publishPath: build
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
     envVars:
       - key: NODE_VERSION
         value: 20.18.0
