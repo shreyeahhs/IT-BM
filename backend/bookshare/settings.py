@@ -22,7 +22,13 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-m&!#j6(6-!n-@8*2!_()z*7r-!
 
 DEBUG = env_bool('DEBUG', default=True)
 
-ALLOWED_HOSTS = env_list('ALLOWED_HOSTS', default='127.0.0.1,localhost')
+ALLOWED_HOSTS = env_list('ALLOWED_HOSTS', default='127.0.0.1,localhost,.onrender.com')
+
+# Render exposes the external hostname as RENDER_EXTERNAL_HOSTNAME.
+# Include it automatically so deploys keep working even if ALLOWED_HOSTS is incomplete.
+render_external_hostname = os.getenv('RENDER_EXTERNAL_HOSTNAME', '').strip()
+if render_external_hostname and render_external_hostname not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(render_external_hostname)
 
 INSTALLED_APPS = [
     'django.contrib.admin',
