@@ -329,3 +329,28 @@ Verbose test output uses:
 
 - Base URL: `http://127.0.0.1:8000/api/`
 
+## Render Deployment (Backend)
+
+If Render shows this error:
+
+`ModuleNotFoundError: No module named 'your_application'`
+
+your start command is using the placeholder module name. Use the Django project module from this repo instead.
+
+### Correct Render Settings
+
+- Root Directory: `backend`
+- Build Command: `pip install -r requirements.txt`
+- Start Command: `python manage.py migrate && gunicorn bookshare.wsgi:application --bind 0.0.0.0:$PORT`
+
+### Required Environment Variables
+
+- `DEBUG=false`
+- `ALLOWED_HOSTS=.onrender.com`
+- `SQLITE_PATH=/var/data/db.sqlite3`
+- `SECRET_KEY=<your-secret-key>`
+
+### Optional Blueprint
+
+This repo includes `render.yaml` at the project root with the same working settings.
+

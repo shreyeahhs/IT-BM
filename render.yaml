@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: it-bm-backend
+    env: python
+    rootDir: backend
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python manage.py migrate && gunicorn bookshare.wsgi:application --bind 0.0.0.0:$PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: DEBUG
+        value: "false"
+      - key: ALLOWED_HOSTS
+        value: .onrender.com
+      - key: SQLITE_PATH
+        value: /var/data/db.sqlite3
+    disk:
+      name: it-bm-data
+      mountPath: /var/data
+      sizeGB: 1
